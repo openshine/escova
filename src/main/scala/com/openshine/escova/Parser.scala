@@ -1,5 +1,6 @@
 package com.openshine.escova
 
+import java.security.{AccessController, PrivilegedAction}
 import java.util
 
 import com.openshine.escova.monads.ComplexityMeasureMonad
@@ -11,7 +12,7 @@ import org.elasticsearch.rest.RestRequest
 import org.elasticsearch.rest.action.search.RestSearchAction
 import org.elasticsearch.search.SearchModule
 import org.elasticsearch.search.aggregations.{AggregationBuilder,
-AggregatorFactories}
+  AggregatorFactories}
 import org.elasticsearch.search.aggregations.bucket.histogram
 .DateHistogramAggregationBuilder
 import org.elasticsearch.search.builder.SearchSourceBuilder
@@ -103,11 +104,11 @@ object Parser {
   }
 
   def analyze(n: SearchSourceBuilder): ComplexityMeasure[Double] = {
-    val m: Seq[ComplexityMeasure[Double]] =
-      n.aggregations()
-        .getAggregatorFactories
-        .asScala.map(analyze)
-    m.fold(SimpleComplexityMeasure(0.0))(fsum)
+    val aggs = Option(n).flatMap { n => Option(n.aggregations()) }
+
+    aggs.map(_.getAggregatorFactories.asScala.map(analyze))
+      .map(_.fold(SimpleComplexityMeasure(0d))(fsum))
+      .getOrElse(SimpleComplexityMeasure(-1d))
   }
 
   /**
@@ -118,13 +119,20 @@ object Parser {
     * @return the aggregation builders beneath `ag`
     */
   def getSubAggregations(ag: AggregationBuilder): Seq[AggregationBuilder] = {
-    val f: java.lang.reflect.Field =
-      classOf[AggregationBuilder].getDeclaredField("factoriesBuilder")
+    val factoriesBuilder = AccessController.doPrivileged(
+      new PrivilegedAction[AggregatorFactories.Builder] {
+        override def run(): AggregatorFactories.Builder = {
+          val f: java.lang.reflect.Field =
+            classOf[AggregationBuilder].getDeclaredField("factoriesBuilder")
 
-    f.setAccessible(true)
-    // Because it seems we need a factory builder to build factories to build
-    // objects for some reason.
-    val factoriesBuilder = f.get(ag).asInstanceOf[AggregatorFactories.Builder]
+          f.setAccessible(true)
+          // Because it seems we need a factory builder to build factories to
+          // build
+          // objects for some reason.
+
+          f.get(ag).asInstanceOf[AggregatorFactories.Builder]
+        }
+      })
 
     factoriesBuilder.getAggregatorFactories.asScala
   }
