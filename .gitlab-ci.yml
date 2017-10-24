@@ -1,0 +1,20 @@
+stages:
+- test
+- build
+
+tests:
+  image: gradle:4.2-jdk8
+  stage: test
+  script:
+    - gradle -Dbuild.snapshot=false test
+
+generate plugin:
+  image: gradle:4.2-jdk8
+  stage: build
+  script:
+    - gradle -Dbuild.snapshot=false build
+
+  artifacts:
+    paths:
+      - build/distributions/escova-0.1.0.jar
+    expire_in: 1 week
