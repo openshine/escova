@@ -2,6 +2,8 @@ stages:
 - test
 - build
 
+# TODO: Configure caching, but hopefully we migrate to sbt soon enough
+
 tests:
   image: gradle:4.2-jdk8
   stage: test
