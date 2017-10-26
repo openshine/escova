@@ -2,11 +2,6 @@ package com.openshine.escova.functional
 
 import java.security.{AccessController, PrivilegedAction}
 
-import org.elasticsearch.search.aggregations.{
-  AggregationBuilder,
-  AggregatorFactories
-}
-
 import scala.reflect.ClassTag
 
 /**
@@ -23,13 +18,10 @@ object implicits {
               c.runtimeClass.getDeclaredField(fieldName)
 
             f.setAccessible(true)
-            // Because it seems we need a factory builder to build factories to
-            // build
-            // objects for some reason.
-
             f.get(instance).asInstanceOf[B]
           }
         })
     }
   }
+
 }
