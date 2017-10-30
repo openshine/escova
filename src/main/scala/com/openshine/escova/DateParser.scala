@@ -125,11 +125,4 @@ object DateParser {
     () => frozenTime
   }
 
-  case class FixedDateRange(multiple: Int, unit: DateUnit) extends DateRange
-
-  // For Current month; last month; current week and so on
-  case class FixStartDateRange(start: Date, fixpoint: DateFixPoint)
-    extends DateRange
-
-
 }

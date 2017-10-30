@@ -2,6 +2,7 @@ package com.openshine.escova
 
 import java.time.LocalDateTime
 import java.time.temporal.{ChronoField, ChronoUnit, TemporalField, TemporalUnit}
+import java.util.Locale
 
 /**
   * @author Santiago Saavedra (ssaavedra@openshine.com)
@@ -13,6 +14,10 @@ object fixpoint {
                                      field: TemporalField,
                                      validRange: List[Int] = List(1))
     extends DateRange {
+    override def toMap: Map[String, String] = Map(
+      "type" -> "since",
+      "since" -> field.getDisplayName(Locale.ROOT)
+    )
     def matches(dt: LocalDateTime): Boolean = {
       if (
         dt.truncatedTo(truncate).compareTo(
