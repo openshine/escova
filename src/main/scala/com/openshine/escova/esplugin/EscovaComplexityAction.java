@@ -89,7 +89,7 @@ public class EscovaComplexityAction extends BaseRestHandler {
                     parseSearchRequest(searchRequest, request, parser));
 
             DateParser.analyze(
-                    searchRequest.source(), fieldName, DateParser.now());
+                    searchRequest.source(), fieldName);
 
             channel.sendResponse(new RestResponse() {
                 @Override
