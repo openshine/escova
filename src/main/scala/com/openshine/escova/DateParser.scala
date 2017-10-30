@@ -41,7 +41,7 @@ object DateParser {
     val possibleTimes: Seq[FLTuple] =
       query.map(findQueryTimes(fieldName)).getOrElse(Seq())
 
-    possibleTimes.map(parseDate)
+    possibleTimes.flatMap(parseDate)
 
   }
 
