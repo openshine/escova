@@ -1,32 +1,32 @@
 package com.openshine.escova
 
+import java.time.temporal.ChronoUnit
+
 /**
   * @author Santiago Saavedra (ssaavedra@openshine.com)
   */
 object fixrange {
-
   val all = List(
-    Year, Month31, Week, WorkWeek, Day, Hour, Minute, Second
+    Year, Month, Week, Day, Hour, Minute, Second
   )
 
-  sealed abstract class DateUnit(val len: Long) extends DateRange
+  sealed abstract class DateUnit(val name: String, val len: ChronoUnit)
+    extends DateRange
 
   case class DateUnitMultiple(multiplicity: Int, base: DateUnit)
-    extends DateUnit(base.len * multiplicity)
+    extends DateUnit(base.name, base.len)
 
-  case object Second extends DateUnit(1000)
+  case object Second extends DateUnit("second", ChronoUnit.SECONDS)
 
-  case object Minute extends DateUnit(60000)
+  case object Minute extends DateUnit("minute", ChronoUnit.MINUTES)
 
-  case object Hour extends DateUnit(3600000)
+  case object Hour extends DateUnit("hour", ChronoUnit.HOURS)
 
-  case object Day extends DateUnit(Hour.len * 24)
+  case object Day extends DateUnit("day", ChronoUnit.DAYS)
 
-  case object WorkWeek extends DateUnit(Day.len * 5)
+  case object Week extends DateUnit("week", ChronoUnit.WEEKS)
 
-  case object Week extends DateUnit(Day.len * 7)
+  case object Month extends DateUnit("month", ChronoUnit.MONTHS)
 
-  case object Month31 extends DateUnit(Day.len * 31)
-
-  case object Year extends DateUnit(Day.len * 365)
+  case object Year extends DateUnit("year", ChronoUnit.YEARS)
 }

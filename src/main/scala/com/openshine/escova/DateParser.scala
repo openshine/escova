@@ -1,6 +1,8 @@
 package com.openshine.escova
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.temporal.ChronoUnit
+import java.time.{Duration, LocalDateTime, ZoneOffset}
+import java.util.concurrent.TimeUnit
 import java.util.function.LongSupplier
 import java.util.{Date, Locale}
 
@@ -10,6 +12,7 @@ import com.openshine.escova.functional.FieldLens
 import org.elasticsearch.common.joda.{DateMathParser, FormatDateTimeFormatter, Joda}
 import org.elasticsearch.index.query.{BoolQueryBuilder, QueryBuilder, RangeQueryBuilder}
 import org.elasticsearch.search.builder.SearchSourceBuilder
+import org.joda.time.DateTimeZone
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
@@ -84,6 +87,13 @@ object DateParser {
     } else {
 
       // Discard milliseconds in the range
+      val dd1 = LocalDateTime.ofEpochSecond(d1 / 1000, 0, ZoneOffset.UTC)
+      val dd2 = LocalDateTime.ofEpochSecond(d2 / 1000, 0, ZoneOffset.UTC)
+
+      val drange = Duration.between(dd1, dd2)
+
+      ChronoUnit.MONTHS.between(dd1, dd2)
+
       val range = (d2 - d1) - ((d2 - d1) % 1000)
 
       // If the range is an exact multiple of minutes, hours, days, weeks or
@@ -92,17 +102,15 @@ object DateParser {
       // days.
 
       val fixedTime: List[DateUnit] = fixrange.all
-        .find { time: DateUnit => range % time.len == 0 }
+        .find { time: DateUnit =>
+          time.len.between(dd1, dd2) > 0
+        }
         .map { time: DateUnit =>
           DateUnitMultiple(
-            (range / time.len).toInt,
+            time.len.between(dd1, dd2).toInt,
             time)
         }
         .toList
-
-
-      val dd1: LocalDateTime =
-        LocalDateTime.ofEpochSecond(d1 / 1000, 0, ZoneOffset.UTC)
 
       val fromFixedPointInTime = fixpoint.all
         .filter { time: fixpoint.DateFixPoint => time.matches(dd1) }
