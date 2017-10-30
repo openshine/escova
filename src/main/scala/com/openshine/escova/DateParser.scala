@@ -28,8 +28,11 @@ object DateParser {
     Joda.forPattern("strict_date_optional_time||epoch_millis", Locale.ROOT)
   val dateParser = new DateMathParser(DEFAULT_DATE_TIME_FORMATTER)
 
+  def analyze(n: SearchSourceBuilder, fieldName: String): Seq[DateRange] =
+    analyze(n, fieldName, DateParser.now)
+
   def analyze(n: SearchSourceBuilder, fieldName: String,
-              nowProvider: LongSupplier) = {
+              nowProvider: LongSupplier): Seq[DateRange] = {
     implicit val _np: LongSupplier = nowProvider
     val query = Option(n).flatMap { n => Option(n.query()) }
     val aggs = Option(n).flatMap { n => Option(n.aggregations()) }
