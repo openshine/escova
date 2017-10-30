@@ -2,7 +2,8 @@ package com.openshine.escova
 
 import java.util
 
-import com.openshine.escova.functional.{ComplexityMeasure, SimpleComplexityMeasure, implicits}
+import com.openshine.escova.functional.{ComplexityMeasure,
+  SimpleComplexityMeasure, implicits}
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.common.bytes.{BytesArray, BytesReference}
 import org.elasticsearch.common.joda.DateMathParser
@@ -11,9 +12,12 @@ import org.elasticsearch.common.xcontent.{NamedXContentRegistry, XContentParser}
 import org.elasticsearch.rest.RestRequest
 import org.elasticsearch.rest.action.search.RestSearchAction
 import org.elasticsearch.search.SearchModule
-import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder
-import org.elasticsearch.search.aggregations.bucket.terms.{TermsAggregationBuilder, TermsAggregator}
-import org.elasticsearch.search.aggregations.{AggregationBuilder, AggregatorFactories}
+import org.elasticsearch.search.aggregations.bucket.histogram
+.DateHistogramAggregationBuilder
+import org.elasticsearch.search.aggregations.bucket.terms
+.{TermsAggregationBuilder, TermsAggregator}
+import org.elasticsearch.search.aggregations.{AggregationBuilder,
+  AggregatorFactories}
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.joda.time.DateTimeZone
 
@@ -141,7 +145,8 @@ object Parser {
     fmul(currentAggLevel, nextLevel)
   }
 
-  def termsComplexityFactor(t: TermsAggregationBuilder): ComplexityMeasure[Double] = {
+  def termsComplexityFactor(t: TermsAggregationBuilder)
+  : ComplexityMeasure[Double] = {
     import implicits._
     val requiredSize = t.getPrivateFieldValue[TermsAggregator
     .BucketCountThresholds]("bucketCountThresholds")
@@ -169,12 +174,11 @@ object Parser {
 
     val dateParser = new DateMathParser(DateParser.DEFAULT_DATE_TIME_FORMATTER)
 
-    dateParser.parse(s"now+$expr",
-      () => 0L, false, DateTimeZone.UTC)
+    dateParser.parse(s"now+$expr", () => 0L, false, DateTimeZone.UTC)
   }
 
-  def analyzeDate(agg: DateHistogramAggregationBuilder):
-  ComplexityMeasure[Double] = {
+  def analyzeDate(agg: DateHistogramAggregationBuilder)
+  : ComplexityMeasure[Double] = {
     val dateExpr = agg.dateHistogramInterval.toString
     SimpleComplexityMeasure(1000 / dateMathExpressionToSeconds(dateExpr))
   }

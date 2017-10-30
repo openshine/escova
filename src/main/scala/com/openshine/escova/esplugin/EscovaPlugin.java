@@ -1,6 +1,5 @@
 package com.openshine.escova.esplugin;
 
-import com.openshine.escova.esplugin.EscovaComplexityAction;
 import org.elasticsearch.cluster.metadata.IndexNameExpressionResolver;
 import org.elasticsearch.cluster.node.DiscoveryNodes;
 import org.elasticsearch.common.settings.ClusterSettings;
@@ -42,7 +41,7 @@ public class EscovaPlugin extends Plugin implements ActionPlugin {
             Supplier<DiscoveryNodes> nodesInCluster
     ) {
         return Collections.singletonList(new EscovaComplexityAction(settings,
-         restController
+                restController
         ));
     }
 }
