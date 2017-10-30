@@ -83,10 +83,13 @@ public class EscovaComplexityAction extends BaseRestHandler {
         public void handleRequest(RestRequest request, RestChannel channel, NodeClient client) throws Exception {
             SearchRequest searchRequest = new SearchRequest();
 
+            String fieldName = request.param("dateFieldName", "@timestamp");
+
             request.withContentOrSourceParamParserOrNull(parser ->
                     parseSearchRequest(searchRequest, request, parser));
 
-            DateParser.analyze(searchRequest.source(), DateParser.now());
+            DateParser.analyze(
+                    searchRequest.source(), fieldName, DateParser.now());
 
             channel.sendResponse(new RestResponse() {
                 @Override
