@@ -71,7 +71,7 @@ object DateParser {
     val (d1, d2) = t
 
     dateRangeEvaluator(
-      dateParser.parse(d1.apply, now),
+      dateParser.parse(d2.apply, now),
       dateParser.parse(d1.apply, now)
     )
   }
