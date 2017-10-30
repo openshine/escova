@@ -1,6 +1,5 @@
 package com.openshine.escova.esplugin;
 
-import com.openshine.escova.DateParser;
 import com.openshine.escova.Parser;
 import com.openshine.escova.functional.ComplexityMeasure;
 import org.elasticsearch.action.search.SearchRequest;
@@ -75,38 +74,4 @@ public class EscovaComplexityAction extends BaseRestHandler {
          */
     }
 
-    private class DateParserHandler implements RestHandler {
-        public DateParserHandler(Settings settings) {
-        }
-
-        @Override
-        public void handleRequest(RestRequest request, RestChannel channel, NodeClient client) throws Exception {
-            SearchRequest searchRequest = new SearchRequest();
-
-            String fieldName = request.param("dateFieldName", "@timestamp");
-
-            request.withContentOrSourceParamParserOrNull(parser ->
-                    parseSearchRequest(searchRequest, request, parser));
-
-            DateParser.analyze(
-                    searchRequest.source(), fieldName);
-
-            channel.sendResponse(new RestResponse() {
-                @Override
-                public String contentType() {
-                    return null;
-                }
-
-                @Override
-                public BytesReference content() {
-                    return null;
-                }
-
-                @Override
-                public RestStatus status() {
-                    return null;
-                }
-            });
-        }
-    }
 }
