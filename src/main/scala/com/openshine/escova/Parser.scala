@@ -31,7 +31,7 @@ object Parser {
   private val fmul = functional.monads.ComplexityMeasureMonad.liftA2(mul)
 
   def main(args: Array[String]): Unit = {
-    val complexity = parse(
+    val searchRequest = parse(
       """
         |{
         |  "aggs": {
@@ -63,6 +63,8 @@ object Parser {
         |}
       """.stripMargin, "index1,index2", "type1")
 
+    val complexity = analyze(searchRequest.source())
+
     println("Final complexity: ", complexity.value)
 
 
@@ -71,7 +73,7 @@ object Parser {
   def parse(search_string: String,
             indices: String,
             types: String
-           ): ComplexityMeasure[Double] = {
+           ): SearchRequest = {
 
     val searchModule = new SearchModule(Settings.EMPTY, false,
       util.Collections.emptyList())
@@ -110,7 +112,7 @@ object Parser {
           )
       )
 
-    analyze(searchRequest.source())
+    searchRequest
   }
 
   def analyze(n: SearchSourceBuilder): ComplexityMeasure[Double] = {

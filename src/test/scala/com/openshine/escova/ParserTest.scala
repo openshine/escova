@@ -76,11 +76,13 @@ class ParserTest extends FlatSpec with Matchers {
     """.stripMargin
 
   "parser with sample1" should "have complexity 3.0" in {
-    assert (Parser.parse(sample1, "idx", "type").value === 12.0 +- 0.1)
+    val s = Parser.parse(sample1, "idx", "type")
+    assert (Parser.analyze(s.source()).value === 12.0 +- 0.1)
   }
 
   "parser with sample2" should "have complexity 10" in {
-    assert (Parser.parse(sample2, "idx", "type").value === 110.0 +- 0.1)
+    val s = Parser.parse(sample2, "idx", "type")
+    assert (Parser.analyze(s.source()).value === 110.0 +- 0.1)
   }
 
   "dateMathExpressionToSeconds" should
