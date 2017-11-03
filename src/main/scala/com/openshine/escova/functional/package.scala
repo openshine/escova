@@ -20,23 +20,23 @@ package object functional {
   object monads {
 
     implicit object ComplexityMeasureMonad
-      extends Monad[ComplexityMeasure]
-        with Applicative[ComplexityMeasure] {
+      extends Monad[CostMeasure]
+        with Applicative[CostMeasure] {
 
-      def unit(a: Int) = SimpleComplexityMeasure(0)
+      def unit(a: Int) = SimpleCostMeasure(0)
 
-      def bind[A, B](ma: ComplexityMeasure[A],
-                     bf: (A) => ComplexityMeasure[B]):
-      ComplexityMeasure[B] = ma.flatMap(bf)
+      def bind[A, B](ma: CostMeasure[A],
+                     bf: (A) => CostMeasure[B]):
+      CostMeasure[B] = ma.flatMap(bf)
 
-      override def liftA2[A, B](f: (A, A) => B): (ComplexityMeasure[A],
-        ComplexityMeasure[A]) => ComplexityMeasure[B] = {
-        (a: ComplexityMeasure[A], b: ComplexityMeasure[A]) =>
+      override def liftA2[A, B](f: (A, A) => B): (CostMeasure[A],
+        CostMeasure[A]) => CostMeasure[B] = {
+        (a: CostMeasure[A], b: CostMeasure[A]) =>
           unit(f(a.value, b.value))
       }
 
-      override def unit[A](a: A): ComplexityMeasure[A] =
-        SimpleComplexityMeasure(a)
+      override def unit[A](a: A): CostMeasure[A] =
+        SimpleCostMeasure(a)
     }
 
   }

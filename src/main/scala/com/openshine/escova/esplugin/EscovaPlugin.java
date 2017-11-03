@@ -40,7 +40,7 @@ public class EscovaPlugin extends Plugin implements ActionPlugin {
             IndexNameExpressionResolver indexNameExpressionResolver,
             Supplier<DiscoveryNodes> nodesInCluster
     ) {
-        return Collections.singletonList(new EscovaComplexityAction(settings,
+        return Collections.singletonList(new EscovaCostCalculatorAction(settings,
                 restController
         ));
     }

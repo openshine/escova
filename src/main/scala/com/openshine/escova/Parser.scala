@@ -2,8 +2,8 @@ package com.openshine.escova
 
 import java.util
 
-import com.openshine.escova.functional.{ComplexityMeasure,
-  SimpleComplexityMeasure, implicits}
+import com.openshine.escova.functional.{CostMeasure,
+  SimpleCostMeasure, implicits}
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.common.bytes.{BytesArray, BytesReference}
 import org.elasticsearch.common.joda.DateMathParser
@@ -115,12 +115,12 @@ object Parser {
     searchRequest
   }
 
-  def analyze(n: SearchSourceBuilder): ComplexityMeasure[Double] = {
+  def analyze(n: SearchSourceBuilder): CostMeasure[Double] = {
     val aggs = Option(n).flatMap { n => Option(n.aggregations()) }
 
     aggs.map(_.getAggregatorFactories.asScala.map(analyze))
-      .map(_.fold(SimpleComplexityMeasure(0d))(fsum))
-      .getOrElse(SimpleComplexityMeasure(-1d))
+      .map(_.fold(SimpleCostMeasure(0d))(fsum))
+      .getOrElse(SimpleCostMeasure(-1d))
   }
 
   /**
@@ -139,30 +139,30 @@ object Parser {
     factoriesBuilder.getAggregatorFactories.asScala
   }
 
-  def analyze(agg: AggregationBuilder): ComplexityMeasure[Double] = {
+  def analyze(agg: AggregationBuilder): CostMeasure[Double] = {
     val currentAggLevel = analyzeAgg(agg)
     val nxL = getSubAggregations(agg).map(analyze)
 
-    val nextLevel = nxL.fold(SimpleComplexityMeasure(1d))(fsum)
+    val nextLevel = nxL.fold(SimpleCostMeasure(1d))(fsum)
     fmul(currentAggLevel, nextLevel)
   }
 
   def termsComplexityFactor(t: TermsAggregationBuilder)
-  : ComplexityMeasure[Double] = {
+  : CostMeasure[Double] = {
     import implicits._
     val requiredSize = t.getPrivateFieldValue[TermsAggregator
     .BucketCountThresholds]("bucketCountThresholds")
       .getRequiredSize
 
-    SimpleComplexityMeasure(math.pow(10, requiredSize / 10))
+    SimpleCostMeasure(math.pow(10, requiredSize / 10))
   }
 
-  def analyzeAgg(agg: AggregationBuilder): ComplexityMeasure[Double] = {
+  def analyzeAgg(agg: AggregationBuilder): CostMeasure[Double] = {
     println("Analyzing agg: ", agg.getClass)
     agg match {
       case agg: DateHistogramAggregationBuilder => analyzeDate(agg)
       case agg: TermsAggregationBuilder => termsComplexityFactor(agg)
-      case _ => SimpleComplexityMeasure(1d)
+      case _ => SimpleCostMeasure(1d)
     }
   }
 
@@ -180,9 +180,9 @@ object Parser {
   }
 
   def analyzeDate(agg: DateHistogramAggregationBuilder)
-  : ComplexityMeasure[Double] = {
+  : CostMeasure[Double] = {
     val dateExpr = agg.dateHistogramInterval.toString
-    SimpleComplexityMeasure(1000 / dateMathExpressionToSeconds(dateExpr))
+    SimpleCostMeasure(1000 / dateMathExpressionToSeconds(dateExpr))
   }
 
   @inline private def sum(a: Double, b: Double) = a + b

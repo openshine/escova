@@ -1,11 +1,14 @@
 package com.openshine.escova.esplugin;
 
 import com.openshine.escova.DateParser;
+import com.openshine.escova.DateRange;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.node.NodeClient;
+import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.rest.*;
+import scala.collection.Seq;
 
 import static org.elasticsearch.rest.action.search.RestSearchAction.parseSearchRequest;
 
@@ -25,24 +28,10 @@ class DateParserHandler implements RestHandler {
         request.withContentOrSourceParamParserOrNull(parser ->
                 parseSearchRequest(searchRequest, request, parser));
 
-        DateParser.analyze(
+        Seq<DateRange> result = DateParser.analyze(
                 searchRequest.source(), fieldName);
 
-        channel.sendResponse(new RestResponse() {
-            @Override
-            public String contentType() {
-                return "application/json";
-            }
-
-            @Override
-            public BytesReference content() {
-                return null;
-            }
-
-            @Override
-            public RestStatus status() {
-                return RestStatus.OK;
-            }
-        });
+        DateParser.sendResponse(channel, searchRequest, fieldName, result,
+                RestStatus.OK);
     }
 }

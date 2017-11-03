@@ -1,7 +1,7 @@
 package com.openshine.escova.esplugin;
 
 import com.openshine.escova.Parser;
-import com.openshine.escova.functional.ComplexityMeasure;
+import com.openshine.escova.functional.CostMeasure;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.common.bytes.BytesArray;
@@ -18,10 +18,10 @@ import static org.elasticsearch.rest.action.search.RestSearchAction.parseSearchR
 /**
  * @author Santiago Saavedra (ssaavedra@openshine.com)
  */
-public class EscovaComplexityAction extends BaseRestHandler {
+public class EscovaCostCalculatorAction extends BaseRestHandler {
     private final RestHandler dateParserHandler;
 
-    public EscovaComplexityAction(Settings settings, RestController controller) {
+    public EscovaCostCalculatorAction(Settings settings, RestController controller) {
         super(settings);
 
         dateParserHandler = new DateParserHandler(settings);
@@ -47,7 +47,7 @@ public class EscovaComplexityAction extends BaseRestHandler {
         request.withContentOrSourceParamParserOrNull(parser ->
                 parseSearchRequest(searchRequest, request, parser));
 
-        ComplexityMeasure<Object> analyze =
+        CostMeasure<Object> analyze =
                 Parser.analyze(searchRequest.source());
 
         return channel -> {
@@ -59,7 +59,9 @@ public class EscovaComplexityAction extends BaseRestHandler {
 
                 @Override
                 public BytesReference content() {
-                    return new BytesArray("The complexity is: " + analyze);
+                    return new BytesArray(
+                            "{\"cost\": " + analyze.value() + " }"
+                    );
                 }
 
                 @Override
