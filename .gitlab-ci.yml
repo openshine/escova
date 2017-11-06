@@ -2,21 +2,27 @@ stages:
 - test
 - build
 
-# TODO: Configure caching, but hopefully we migrate to sbt soon enough
-
 tests:
-  image: gradle:4.2-jdk8
+  image: linkyard/docker-sbt
   stage: test
+  cache:
+    paths:
+      - ~/.sbt/
+      - ~/.ivy2/
   script:
-    - gradle -Dbuild.snapshot=false test
+    - sbt test
 
 generate plugin:
-  image: gradle:4.2-jdk8
+  image: linkyard/docker-sbt
   stage: build
+  cache:
+    paths:
+      - ~/.sbt/
+      - ~/.ivy2/
   script:
-    - gradle -Dbuild.snapshot=false build
+    - sbt "esplugin 5.6.3" "esplugin 5.6.0" "esplugin 5.6.1" "esplugin 5.5.1"
 
   artifacts:
     paths:
-      - build/distributions/escova-0.1.0.jar
+      - target/escova*.zip
     expire_in: 1 week
