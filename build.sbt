@@ -14,7 +14,7 @@ espluginClass := "com.openshine.escova.esplugin.EscovaPlugin"
 espluginDescription :=
   """
     |ESCOVA is a Cost Analyzer and Validation Assistant for ES Queries
-  """.stripMargin
+  """.stripMargin.trim
 
 
 libraryDependencies ++= Seq(

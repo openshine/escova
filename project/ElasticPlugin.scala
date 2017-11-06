@@ -3,6 +3,7 @@ import java.io.{BufferedReader, FileReader, FileWriter, PrintWriter}
 import sbt.Keys._
 import sbt.{Def, _}
 
+import scala.util.matching.Regex
 import scala.util.matching.Regex.Match
 
 /**
@@ -135,8 +136,11 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
         case s if s.startsWith("\\") => Some(
           """\$\{%s\}""" format s.substring
           (3, s.length - 1))
-        case s => props.get(s.substring(2, s.length - 1))
+        case s => props.get(s.substring(2, s.length - 1)).map(multilineFormat)
       }
+    }
+    private def multilineFormat(in: String): String = {
+      in.replaceAll("\\n", Regex.quoteReplacement("\\\\n\\\\\n"))
     }
   }
 
