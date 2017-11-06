@@ -1,24 +1,22 @@
-val v = new AnyRef {
-  val elasticsearch = "5.6.3"
-}
-
 name := "escova"
 
 organization := "com.openshine"
 
-version := "0.1.0"
+// version := "0.1.0"
 
 scalaVersion := "2.12.4"
 
-espluginDescription := "ESCOVA is a Cost Analyzer and Validation Assistant " +
-  "for ES Queries"
+espluginDescription :=
+  """
+    |ESCOVA is a Cost Analyzer and Validation Assistant for ES Queries
+  """.stripMargin
 
 espluginClass := "com.openshine.escova.esplugin.EscovaPlugin"
 
 enablePlugins(GitVersioning)
 enablePlugins(ElasticPlugin)
 
-elasticsearchVersion := "5.6.3"
+elasticsearchVersion := System.getProperty("elasticsearch.version", "5.6.3")
 
 libraryDependencies ++= Seq(
   "org.json4s" %% "json4s-ast" % "3.5.3",
