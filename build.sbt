@@ -8,7 +8,7 @@ scalaVersion := "2.12.4"
 
 enablePlugins(GitVersioning)
 git.useGitDescribe := true
-git.baseVersion := "0.1.0"
+git.baseVersion := "0.10-dev"
 
 espluginClass := "com.openshine.escova.esplugin.EscovaPlugin"
 espluginDescription :=
