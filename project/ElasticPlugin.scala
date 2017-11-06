@@ -7,6 +7,50 @@ import scala.util.matching.Regex
 import scala.util.matching.Regex.Match
 
 /**
+  * This Sbt AutoPlugin creates the infrastructure needed to produce
+  * an ElasticSearch plugin.
+  * 
+  * The esplugin command is the main user-interaction entry point,
+  * which will take zero or one parameter. If no parameters are
+  * supplied, the plugin will be built against the version provided as
+  * elasticsearchVersion in your project. If you want to provide the
+  * plugin for several source-compatible versions you can recompile
+  * the plugin for each one by providing an additional argument to the
+  * esplugin command. Beware that when using from the command line,
+  * you must call the command between quotes as a single argument to
+  * the shell. For example, to build the plugin both against ES 5.3.6
+  * and ES 5.5.0, you would use a command line such as:
+  * {{{
+  * $ sbt "esplugin 5.3.6" "esplugin 5.5.0"
+  * }}}
+  * 
+  * A description for the plugin must be input via
+  * espluginDescription, and if there are newlines, they will be
+  * properly converted to the Java-properties file. However, not much
+  * testing was performed for this substitution, as it does not affect
+  * so much the core functionality. If you are not ok with how the
+  * substitutions are performed, please substitute the provided plugin
+  * descriptor file with your own by setting espluginDescriptorFile
+  * with a path to your own copy of the file.
+  * 
+  * The plugin gets built by the espluginZip task, which should not be
+  * overwritten unless its value needs changing. It will add the
+  * appropriate version of the elasticsearch package as a provided
+  * dependency, so you MUST NOT depend on ElasticSearch yourself in
+  * your libraryDependencies.
+  * 
+  * The projectSettings get augmented with default definitions,
+  * including a default elasticsearchVersion and the plugin metadata
+  * directory, in which to put processed files, such as the
+  * plugin-security.policy file for files requiring
+  * SecurityManager-related privileges.
+  *
+  * To the best of our knowledge, there was
+  * no readily-available function in sbt to populate a Java-properties
+  * file with variables (e.g., to substitute such variables by their
+  * values) and that's why the Filter object exists. If that is
+  * unnecessary, please send feedback.
+  * 
   * @author Santiago Saavedra (ssaavedra@openshine.com)
   */
 object ElasticPlugin extends AutoPlugin with ElasticKeys {
@@ -23,6 +67,9 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
     espluginJavaVersion := "1.8",
 
     espluginHasNativeController := false,
+
+    espluginDescriptorFile := baseDirectory.value / "project" /
+        "plugin-descriptor.properties",
 
     espluginZip := {
       val target = Keys.target.value
@@ -57,9 +104,6 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
         "hasNativeController" -> espluginHasNativeController.value.toString
       )
 
-      val pluginDescriptorFile = baseDirectory.value / "project" /
-        "plugin-descriptor.properties"
-
       IO.delete(zipFile)
       IO.delete(distdir)
 
@@ -67,8 +111,8 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
       IO.copy(jarMappings)
       IO.copy(pluginMetadata)
 
-      Filter.apply(pluginDescriptorFile,
-        distdir / pluginDescriptorFile.getName,
+      Filter.apply(espluginDescriptorFile.value,
+        distdir / espluginDescriptorFile.value.getName,
         metadataProps)
 
 
