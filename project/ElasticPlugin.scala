@@ -1,7 +1,7 @@
 import java.io.{BufferedReader, FileReader, FileWriter, PrintWriter}
 
 import sbt.Keys._
-import sbt._
+import sbt.{Def, _}
 
 import scala.util.matching.Regex.Match
 
@@ -10,42 +10,20 @@ import scala.util.matching.Regex.Match
   */
 object ElasticPlugin extends AutoPlugin with ElasticKeys {
 
-  object Filter {
-    val pattern = """((?:\\?)\$\{.+?\})""".r
+  override lazy val projectSettings: Seq[Def.Setting[_]] = Seq[Def.Setting[_]](
+    commands += esplugin,
 
-    def replacer(props: Map[String, String]) = (m: Match) => {
-      m.matched match {
-        case s if s.startsWith("\\") => Some(
-          """\$\{%s\}""" format s.substring
-          (3, s.length - 1))
-        case s => props.get(s.substring(2, s.length - 1))
-      }
-    }
-
-    def filter(line: String, props: Map[String, String]) = {
-      pattern.replaceSomeIn(line, replacer(props))
-    }
-
-    def apply(src: File, dst: File, props: Map[String, String])
-    : Unit = {
-      val in = new BufferedReader(new FileReader(src))
-      val out = new PrintWriter(new FileWriter(dst))
-      IO.foreachLine(in) { line =>
-        IO.writeLines(out, Seq(filter(line, props)))
-      }
-      in.close()
-      out.close()
-    }
-  }
-
-  override lazy val projectSettings = Seq[Def.Setting[_]](
     espluginMetadataDir := {
       baseDirectory.value / "src" / "main" / "plugin-metadata"
     },
 
     elasticsearchVersion := "5.6.3",
 
-    esplugin := {
+    espluginJavaVersion := "1.8",
+
+    espluginHasNativeController := false,
+
+    espluginZip := {
       val target = Keys.target.value
       val name = Keys.name.value
       val version = Keys.version.value
@@ -53,6 +31,8 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
       val distdir: File = target / "elasticsearch"
       val zipFile: File = target /
         s"$name-$version-for-es-${elasticsearchVersion.value}.zip"
+
+      println(s"Using ElasticSearch version: ${elasticsearchVersion.value}")
 
       val allLibs: List[File] = dependencyClasspath
         .in(Runtime).value.map(_.data)
@@ -71,9 +51,9 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
         "version" -> version,
         "name" -> name,
         "classname" -> espluginClass.value,
-        "javaVersion" -> "1.8", // TODO Allow changing this
+        "javaVersion" -> espluginJavaVersion.value,
         "elasticsearchVersion" -> elasticsearchVersion.value,
-        "hasNativeController" -> "false" // TODO Allow changing this
+        "hasNativeController" -> espluginHasNativeController.value.toString
       )
 
       val pluginDescriptorFile = baseDirectory.value / "project" /
@@ -102,6 +82,23 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
         .value % "provided"
     )
   )
+  val esplugin = Command.args("esplugin", "<esversion>", Help(
+    "esplugin", ("esplugin", "Build an ElasticSearch plugin"),
+    """
+      |Build a plugin for ElasticSearch, optionally providing a specific
+      |version for compiling as an argument.
+    """.stripMargin
+  )) {
+    (state, esv) =>
+      val extracted = Project extract state
+      val newState = extracted.append(Seq(
+        elasticsearchVersion := esv.headOption
+          .getOrElse(elasticsearchVersion.value)),
+        state)
+      val (s, _) = Project.extract(newState).runTask(espluginZip in Compile,
+        newState)
+      s
+  }
 
   override def requires = plugins.JvmPlugin
 
@@ -115,11 +112,34 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
       else r
     } else List(f)
 
-  object autoImport extends ElasticKeys {
-    case class ESPluginInfo(
-      description: String,
-      className: String
-    )
+  object Filter {
+    private val pattern = """((?:\\?)\$\{.+?\})""".r
+
+    def apply(src: File, dst: File, props: Map[String, String])
+    : Unit = {
+      val in = new BufferedReader(new FileReader(src))
+      val out = new PrintWriter(new FileWriter(dst))
+      IO.foreachLine(in) { line =>
+        IO.writeLines(out, Seq(filter(line, props)))
+      }
+      in.close()
+      out.close()
+    }
+
+    private def filter(line: String, props: Map[String, String]) = {
+      pattern.replaceSomeIn(line, replacer(props))
+    }
+
+    private def replacer(props: Map[String, String]) = (m: Match) => {
+      m.matched match {
+        case s if s.startsWith("\\") => Some(
+          """\$\{%s\}""" format s.substring
+          (3, s.length - 1))
+        case s => props.get(s.substring(2, s.length - 1))
+      }
+    }
   }
+
+  object autoImport extends ElasticKeys
 
 }
