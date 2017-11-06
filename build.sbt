@@ -6,17 +6,16 @@ organization := "com.openshine"
 
 scalaVersion := "2.12.4"
 
+enablePlugins(GitVersioning)
+git.useGitDescribe := true
+git.baseVersion := "0.1.0"
+
+espluginClass := "com.openshine.escova.esplugin.EscovaPlugin"
 espluginDescription :=
   """
     |ESCOVA is a Cost Analyzer and Validation Assistant for ES Queries
   """.stripMargin
 
-espluginClass := "com.openshine.escova.esplugin.EscovaPlugin"
-
-enablePlugins(GitVersioning)
-enablePlugins(ElasticPlugin)
-
-elasticsearchVersion := System.getProperty("elasticsearch.version", "5.6.3")
 
 libraryDependencies ++= Seq(
   "org.json4s" %% "json4s-ast" % "3.5.3",
