@@ -54,7 +54,7 @@ public class EscovaCostCalculatorAction extends BaseRestHandler {
             RestResponse response = new RestResponse() {
                 @Override
                 public String contentType() {
-                    return "text/plain";
+                    return "application/json";
                 }
 
                 @Override
