@@ -1,5 +1,6 @@
 package com.openshine.escova.esplugin;
 
+import com.openshine.escova.Endpoints;
 import com.openshine.escova.Parser;
 import com.openshine.escova.functional.CostMeasure;
 import org.elasticsearch.action.search.SearchRequest;
@@ -47,28 +48,8 @@ public class EscovaCostCalculatorAction extends BaseRestHandler {
         request.withContentOrSourceParamParserOrNull(parser ->
                 parseSearchRequest(searchRequest, request, parser));
 
-        CostMeasure<Object> analyze =
-                Parser.analyze(searchRequest.source());
-
         return channel -> {
-            RestResponse response = new RestResponse() {
-                @Override
-                public String contentType() {
-                    return "application/json";
-                }
-
-                @Override
-                public BytesReference content() {
-                    return new BytesArray(
-                            "{\"cost\": " + analyze.value() + " }"
-                    );
-                }
-
-                @Override
-                public RestStatus status() {
-                    return RestStatus.OK;
-                }
-            };
+            RestResponse response = Endpoints.java(Endpoints.Searchv.apply(searchRequest.source()));
             channel.sendResponse(response);
         };
         /*
