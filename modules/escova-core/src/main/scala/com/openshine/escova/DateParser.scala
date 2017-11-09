@@ -1,14 +1,10 @@
 package com.openshine.escova
 
-import java.io.ByteArrayOutputStream
 import java.time.temporal.ChronoUnit
 import java.time.{Duration, LocalDateTime, ZoneOffset}
-import java.util.concurrent.TimeUnit
 import java.util.function.LongSupplier
 import java.util.{Date, Locale}
 
-import com.fasterxml.jackson.core.{JsonFactory, JsonGenerator}
-import com.openshine.escova.fixpoint.DateFixPoint
 import com.openshine.escova.fixrange._
 import com.openshine.escova.functional.FieldLens
 import org.elasticsearch.action.search.SearchRequest
@@ -19,7 +15,6 @@ import org.elasticsearch.rest.{RestChannel, RestResponse, RestStatus}
 import org.elasticsearch.search.aggregations.AggregationBuilder
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder
 import org.elasticsearch.search.builder.SearchSourceBuilder
-import org.joda.time.DateTimeZone
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
@@ -51,8 +46,8 @@ object DateParser {
 
     override def content: BytesReference = {
       import org.json4s._
-      import org.json4s.native.JsonMethods._
       import JsonDSL.WithBigDecimal._
+      import org.json4s.native.JsonMethods._
 
       val content = ("_metadata" -> ("fieldname" -> fieldName)) ~
         ("v1alpha/dates_range" -> result.map(_.toMap)) ~

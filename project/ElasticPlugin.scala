@@ -140,14 +140,15 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
         elasticsearchVersion := esv.headOption
           .getOrElse(elasticsearchVersion.value)),
         state)
-      val (s, _) = Project.extract(newState).runTask(espluginZip in Compile,
-        newState)
+      val (s, _) = Project.extract(newState)
+        .runTask(espluginZip in Compile, newState)
       s
   }
 
   override def requires = plugins.JvmPlugin
 
-  override def trigger = allRequirements
+  // Do not enable automatically
+  override def trigger = noTrigger
 
   private def entries(f: File, includeDirs: Boolean = true): List[File] =
     if (f.isDirectory) {
