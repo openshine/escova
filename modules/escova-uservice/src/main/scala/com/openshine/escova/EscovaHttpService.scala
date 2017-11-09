@@ -89,25 +89,7 @@ object EscovaHttpService extends App with ToStrict {
             ))
         }
       }
-  } ~ { context =>
-    val request = context.request
-
-
-    val flow = Http(system)
-      .outgoingConnection(
-        backendServer,
-        backendPort)
-    val handler = Source.single(context.request)
-      .map(r => {
-        r.withHeaders(headers.RawHeader("X-Proxy", "escova-uservice"))
-        r.withUri(r.uri.toRelative)
-      })
-      .via(flow)
-      .runWith(Sink.head)
-      .flatMap(context.complete(_))
-
-    handler
-  }
+  } ~ BackendProxy.route
 
   val (interface, port) = {
     Try((args(0): String, args(1).toInt)).getOrElse {
@@ -118,21 +100,6 @@ object EscovaHttpService extends App with ToStrict {
           .getOrElse(9000)
       )
     }
-  }
-
-  val (backendServer: String, backendPort: Int) = {
-    val host = Option(System.getenv("ESCOVA_BACKEND_HOST"))
-      .toRight("You must provide ESCOVA_BACKEND_HOST in the environment")
-    val port = Try(System.getenv("ESCOVA_BACKEND_PORT").toInt)
-      .toOption
-      .toRight("You must provide a valid int as ESCOVA_BACKEND_PORT")
-
-    host.right.flatMap(host =>
-      port.right.map(port =>
-        (host, port))
-    ).left.map { msg =>
-      throw new RuntimeException(msg)
-    }.right.get
   }
 
   println(s"Bound at http://${interface}:${port}")
