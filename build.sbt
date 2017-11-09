@@ -4,6 +4,11 @@ enablePlugins(GitVersioning)
 lazy val esplugin = project
   .in(file("modules") / "escova-esplugin")
   .settings(common)
+  .settings(Seq(
+    // Our descriptor file is in the root project's directory
+    espluginDescriptorFile := baseDirectory.value /
+      ".." / ".." / "project" / "plugin-descriptor.properties"
+  ))
   .dependsOn(core)
 
 lazy val core = project
@@ -16,31 +21,12 @@ lazy val uservice = project
   .dependsOn(core)
 
 lazy val root = project.in(file("."))
-  .settings(common)
   .settings(Seq(
     name := "escova"
   ))
-  .settings(
+  .aggregate(uservice, esplugin)
 
-    libraryDependencies ++= Seq(
-      "org.json4s" %% "json4s-ast" % "3.5.3",
-      "org.json4s" %% "json4s-core" % "3.5.3",
-      "org.json4s" %% "json4s-native" % "3.5.3"
-      // Warning: Do not use Jackson due to dependency hell against
-      // elasticsearch
-      // as Elasticsearch does not include some jackson modules needed by
-      // json4s.
-      // If such is needed, require json4s-jackson with notTransitive(), but
-      // that
-      // should be avoided while possible.
-    ),
-
-    libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.0.4" % "test",
-      "org.scalactic" %% "scalactic" % "3.0.4" % "test"
-    )
-  )
-
+run in Compile ~= (old => run in Compile in uservice)
 
 val common = Seq(
   organization := "com.openshine",

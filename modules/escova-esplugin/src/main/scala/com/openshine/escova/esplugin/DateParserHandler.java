@@ -3,6 +3,7 @@ package com.openshine.escova.esplugin;
 import com.openshine.escova.DateParser;
 import com.openshine.escova.DateRange;
 import com.openshine.escova.Endpoints;
+import com.openshine.escova.endpoints.ParseDate;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.common.bytes.BytesArray;
@@ -31,7 +32,7 @@ class DateParserHandler implements RestHandler {
                 parseSearchRequest(searchRequest, request, parser));
 
         RestResponse response = Endpoints.java(
-                Endpoints.DateParser.apply(searchRequest.source(), fieldName));
+                ParseDate.apply(searchRequest.source(), fieldName));
 
         channel.sendResponse(response);
     }

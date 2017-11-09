@@ -9,6 +9,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
+import com.openshine.escova.endpoints.{ParseDate, Searchv}
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration.FiniteDuration
@@ -34,7 +35,7 @@ object EscovaHttpService extends App with ToStrict {
         Source.single(context.request)
           .map { request =>
             import org.json4s.native.JsonMethods._
-            val entity = Endpoints.Searchv(
+            val entity = Searchv(
               ElasticHelper.createSourceBuilder(request))
 
             HttpResponse(
@@ -58,7 +59,7 @@ object EscovaHttpService extends App with ToStrict {
               .map { request =>
                 import org.json4s.native.JsonMethods._
 
-                val entity = Endpoints.DateParser(
+                val entity = ParseDate(
                   ElasticHelper.createSourceBuilder(request),
                   fieldName)
 

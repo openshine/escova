@@ -2,6 +2,7 @@ package com.openshine.escova.esplugin;
 
 import com.openshine.escova.Endpoints;
 import com.openshine.escova.Parser;
+import com.openshine.escova.endpoints.Searchv;
 import com.openshine.escova.functional.CostMeasure;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.node.NodeClient;
@@ -49,7 +50,7 @@ public class EscovaCostCalculatorAction extends BaseRestHandler {
                 parseSearchRequest(searchRequest, request, parser));
 
         return channel -> {
-            RestResponse response = Endpoints.java(Endpoints.Searchv.apply(searchRequest.source()));
+            RestResponse response = Endpoints.java(Searchv.apply(searchRequest.source()));
             channel.sendResponse(response);
         };
         /*
