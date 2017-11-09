@@ -14,6 +14,7 @@ import com.openshine.escova.endpoints.{ParseDate, Searchv}
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration.FiniteDuration
 import scala.language.postfixOps
+import scala.util.Try
 
 /**
   * @author Santiago Saavedra (ssaavedra@openshine.com)
@@ -39,8 +40,8 @@ object EscovaHttpService extends App with ToStrict {
               ElasticHelper.createSourceBuilder(request))
 
             HttpResponse(
-              entity=HttpEntity(
-                contentType=`application/json`,
+              entity = HttpEntity(
+                contentType = `application/json`,
                 compact(render(entity))
               )
             )
@@ -51,43 +52,43 @@ object EscovaHttpService extends App with ToStrict {
   val proxy = {
     searchvpath ~
       path("_escova" / "parse_dates") {
-      parameter("dateFieldName") { fieldName =>
-        toStrictEntity(
-          new FiniteDuration(5, TimeUnit.SECONDS)) {
-          context =>
-            Source.single(context.request)
-              .map { request =>
-                import org.json4s.native.JsonMethods._
+        parameter("dateFieldName") { fieldName =>
+          toStrictEntity(
+            new FiniteDuration(5, TimeUnit.SECONDS)) {
+            context =>
+              Source.single(context.request)
+                .map { request =>
+                  import org.json4s.native.JsonMethods._
 
-                val entity = ParseDate(
-                  ElasticHelper.createSourceBuilder(request),
-                  fieldName)
+                  val entity = ParseDate(
+                    ElasticHelper.createSourceBuilder(request),
+                    fieldName)
 
-                HttpResponse(
-                  entity = HttpEntity(
-                    `application/json`,
-                    compact(render(entity))))
-              }
-              .runWith(Sink.head)
-              .flatMap(context.complete(_))
-        }
-      } ~ { context =>
-        import org.json4s._
-        import JsonDSL.WithBigDecimal._
-        import org.json4s.native.JsonMethods._
+                  HttpResponse(
+                    entity = HttpEntity(
+                      `application/json`,
+                      compact(render(entity))))
+                }
+                .runWith(Sink.head)
+                .flatMap(context.complete(_))
+          }
+        } ~ { context =>
+          import org.json4s._
+          import JsonDSL.WithBigDecimal._
+          import org.json4s.native.JsonMethods._
 
-        context.complete(
-          HttpResponse(status = StatusCodes.BadRequest,
-            entity = HttpEntity(
-              compact(render(
-                Map[String, JValue](
-                  "status" -> 400,
-                  "error" -> "You must provide a dateFieldName parameter"
+          context.complete(
+            HttpResponse(status = StatusCodes.BadRequest,
+              entity = HttpEntity(
+                compact(render(
+                  Map[String, JValue](
+                    "status" -> 400,
+                    "error" -> "You must provide a dateFieldName parameter"
+                  ))
                 ))
-              ))
-          ))
+            ))
+        }
       }
-    }
   } ~ { context =>
     val request = context.request
 
@@ -107,9 +108,23 @@ object EscovaHttpService extends App with ToStrict {
 
     handler
   }
+
+  val (interface, port) = {
+    Try((args(0): String, args(1).toInt)).getOrElse {
+      (
+        Option(System.getenv("ESCOVA_BIND_ADDRESS"))
+          .getOrElse("0.0.0.0"),
+        Try(System.getenv("ESCOVA_BIND_PORT").toInt)
+          .getOrElse(9000)
+      )
+    }
+  }
+
+  println(s"Bound at http://${interface}:${port}")
+
   val binding = Http(system).bindAndHandle(
     handler = proxy,
-    interface = "localhost",
-    port = 9000)
+    interface = interface,
+    port = port)
 
 }

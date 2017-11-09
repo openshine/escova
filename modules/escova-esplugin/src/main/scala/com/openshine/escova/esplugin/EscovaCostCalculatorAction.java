@@ -1,13 +1,9 @@
 package com.openshine.escova.esplugin;
 
 import com.openshine.escova.Endpoints;
-import com.openshine.escova.Parser;
 import com.openshine.escova.endpoints.Searchv;
-import com.openshine.escova.functional.CostMeasure;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.node.NodeClient;
-import org.elasticsearch.common.bytes.BytesArray;
-import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.rest.*;
 
