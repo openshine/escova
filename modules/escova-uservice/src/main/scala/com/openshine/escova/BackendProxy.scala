@@ -4,8 +4,10 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes, headers}
 import akka.http.scaladsl.server.Route
+import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.util.Try
 
 /**
@@ -27,7 +29,9 @@ object BackendProxy {
     )
   }
 
-  def route(implicit system: ActorSystem): Route = {
+  def route(implicit system: ActorSystem,
+            materializer: Materializer,
+            ec: ExecutionContextExecutor): Route = {
     maybeHost match {
       case Left(err) => context =>
         context.complete(HttpResponse(
@@ -40,7 +44,9 @@ object BackendProxy {
   }
 
   def rightRoute(backend: BackendHost)
-                (implicit system: ActorSystem): Route = { context =>
+                (implicit system: ActorSystem,
+                 materializer: Materializer,
+                 ec: ExecutionContextExecutor): Route = { context =>
     val request = context.request
 
     val flow = Http(system)
