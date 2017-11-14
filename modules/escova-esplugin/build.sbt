@@ -1,5 +1,5 @@
 
-name := "escova-esplugin"
+name := "escova"
 
 enablePlugins(GitVersioning)
 enablePlugins(ElasticPlugin)
