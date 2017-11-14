@@ -13,7 +13,7 @@ import org.elasticsearch.common.joda.{DateMathParser, FormatDateTimeFormatter, J
 import org.elasticsearch.index.query.{BoolQueryBuilder, QueryBuilder, RangeQueryBuilder}
 import org.elasticsearch.rest.{RestChannel, RestResponse, RestStatus}
 import org.elasticsearch.search.aggregations.AggregationBuilder
-import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder
+import org.elasticsearch.search.aggregations.bucket.histogram.{DateHistogramAggregationBuilder, ExtendedBounds}
 import org.elasticsearch.search.builder.SearchSourceBuilder
 
 import scala.annotation.tailrec
@@ -67,6 +67,8 @@ object DateParser {
     val query = Option(n).flatMap { n => Option(n.query()) }
     val aggs = Option(n).flatMap { n => Option(n.aggregations()) }
 
+    aggs.toList.flatMap(_.getAggregatorFactories.asScala.toList)
+      .foreach(findAggTimes(fieldName))
 
     val possibleTimes: Seq[FLTuple] =
       query.map(findQueryTimes(fieldName)).getOrElse(Seq())
@@ -82,18 +84,15 @@ object DateParser {
     dates
   }
 
-  def findAggTimes(fieldName: String): AggregationBuilder =>
-    Seq[FieldLens[QueryBuilder, String]] = {
+  def findAggTimes(fieldName: String)(agg: AggregationBuilder): Unit = {
+    agg match {
     case agg: DateHistogramAggregationBuilder =>
+      if(agg.field() == fieldName)
+      agg.extendedBounds(new ExtendedBounds("{{startTime}}", "{{endTime}}"))
+    case _ =>
+    }
 
-      Seq(
-        /*
-        FieldLens[AggregationBuilder, String](agg,
-          agg.dateHistogramInterval.toString,
-          agg.dateHistogramInterval(_.toString()))
-          */
-      )
-    case _ => Seq()
+    Parser.getSubAggregations(agg).foreach(findAggTimes(fieldName))
   }
 
 
