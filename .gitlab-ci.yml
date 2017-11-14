@@ -10,7 +10,7 @@ tests:
       - ~/.sbt/
       - ~/.ivy2/
   script:
-    - sbt test
+    - sbt test core/test esplugin/test
 
 generate plugin:
   image: linkyard/docker-sbt
@@ -20,7 +20,7 @@ generate plugin:
       - ~/.sbt/
       - ~/.ivy2/
   script:
-    - sbt "esplugin 5.6.3" "esplugin 5.6.0" "esplugin 5.6.1" "esplugin 5.5.1"
+    - sbt "project esplugin" "esplugin 5.6.3" "esplugin 5.6.0" "esplugin 5.6.1" "esplugin 5.5.1"
 
   artifacts:
     paths:
