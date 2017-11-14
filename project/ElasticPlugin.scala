@@ -2,6 +2,7 @@ import java.io.{BufferedReader, FileReader, FileWriter, PrintWriter}
 
 import sbt.Keys._
 import sbt.{Def, _}
+import sbtassembly.Assembly
 
 import scala.util.matching.Regex
 import scala.util.matching.Regex.Match
@@ -82,12 +83,15 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
 
       println(s"Using ElasticSearch version: ${elasticsearchVersion.value}")
 
+      /*
       val allLibs: List[File] = dependencyClasspath
         .in(Runtime).value.map(_.data)
         .filter(_.isFile).toList
 
       val buildArtifact = packageBin.in(Runtime).value
       val jars: List[File] = buildArtifact :: allLibs
+      */
+      val jars: List[File] = List(sbtassembly.AssemblyKeys.assembly.value)
 
       val jarMappings = jars.map(f => (f, distdir / f.getName))
       val pluginMetadata = entries(espluginMetadataDir.value,

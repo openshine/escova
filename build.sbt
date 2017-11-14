@@ -10,6 +10,7 @@ lazy val esplugin = project
       ".." / ".." / "project" / "plugin-descriptor.properties"
   ))
   .dependsOn(core)
+  .aggregate(core)
 
 lazy val core = project
   .in(file("modules") / "escova-core")
