@@ -2,9 +2,8 @@ package com.openshine.escova
 
 import com.openshine.escova.fixpoint.FirstOfMonth
 import com.openshine.escova.fixrange.{DateUnitMultiple, Month}
-import org.elasticsearch.search.aggregations.AggregationBuilder
-import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder
-import org.elasticsearch.search.builder.SearchSourceBuilder
+import org.elasticsearch.search.aggregations.bucket.histogram
+.DateHistogramAggregationBuilder
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
@@ -30,13 +29,14 @@ class DateParserTest extends FlatSpec with Matchers {
 
     val dates: Seq[DateRange] = DateParser.analyze(n.source(), "date")
 
-    println(dates)
+    // println(dates)
 
-    dates should equal (List(DateUnitMultiple(1, Month), FirstOfMonth))
+    dates should equal(List(DateUnitMultiple(1, Month), FirstOfMonth))
   }
 
 
-  "DateParser with an aggregate" should "add extended_bounds to the aggregate" in {
+  "DateParser with an aggregate" should "add extended_bounds to the " +
+    "aggregate" in {
     val n = Parser.parse(
       """
         |{
@@ -60,12 +60,50 @@ class DateParserTest extends FlatSpec with Matchers {
       """.stripMargin, "index", "type")
 
     val dates = DateParser.analyze(n.source(), "date")
-
-    println(dates)
-
     val agg: DateHistogramAggregationBuilder = n.source()
       .aggregations().getAggregatorFactories.get(0)
       .asInstanceOf[DateHistogramAggregationBuilder]
+
+    agg.extendedBounds().toString should be("{{startTime}}--{{endTime}}")
+  }
+
+  "DateParser with a subaggregate" should
+    "add extended_bounds to the aggregate" in {
+    val n = Parser.parse(
+      """
+        |{
+        |  "query": {
+        |    "range": {
+        |      "date": {
+        |        "gte": "now-1M/M",
+        |        "lte": "now/M"
+        |      }
+        |    }
+        |  },
+        |  "aggs": {
+        |    "1": {
+        |      "terms": {
+        |        "field": "x"
+        |        },
+        |      "aggs": {
+        |        "2": {
+        |          "date_histogram": {
+        |            "field": "date",
+        |            "interval": "month"
+        |          }
+        |        }
+        |      }
+        |    }
+        |  }
+        |}
+      """.stripMargin, "index", "type")
+
+    val dates = DateParser.analyze(n.source(), "date")
+
+    val agg: DateHistogramAggregationBuilder = Parser.getSubAggregations(
+      n.source().aggregations()
+        .getAggregatorFactories.get(0)
+    ).head.asInstanceOf[DateHistogramAggregationBuilder]
 
     agg.extendedBounds().toString should be("{{startTime}}--{{endTime}}")
   }
