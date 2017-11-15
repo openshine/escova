@@ -13,7 +13,7 @@ import org.elasticsearch.common.joda.{DateMathParser, FormatDateTimeFormatter, J
 import org.elasticsearch.index.query.{BoolQueryBuilder, QueryBuilder, RangeQueryBuilder}
 import org.elasticsearch.rest.{RestChannel, RestResponse, RestStatus}
 import org.elasticsearch.search.aggregations.AggregationBuilder
-import org.elasticsearch.search.aggregations.bucket.histogram.{DateHistogramAggregationBuilder, ExtendedBounds}
+import org.elasticsearch.search.aggregations.bucket.histogram.{DateHistogramAggregationBuilder, DateHistogramInterval, ExtendedBounds}
 import org.elasticsearch.search.builder.SearchSourceBuilder
 
 import scala.annotation.tailrec
@@ -89,6 +89,8 @@ object DateParser {
     case agg: DateHistogramAggregationBuilder =>
       if(agg.field() == fieldName)
       agg.extendedBounds(new ExtendedBounds("{{startTime}}", "{{endTime}}"))
+      agg.dateHistogramInterval(
+        new DateHistogramInterval("{{timeGranularity}}"))
     case _ =>
     }
 
