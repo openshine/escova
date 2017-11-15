@@ -15,6 +15,7 @@ lazy val esplugin = project
 lazy val core = project
   .in(file("modules") / "escova-core")
   .settings(common)
+  .settings(Seq(exportJars := true))
 
 lazy val uservice = project
   .in(file("modules") / "escova-uservice")
