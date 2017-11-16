@@ -9,11 +9,14 @@ import com.openshine.escova.fixrange._
 import com.openshine.escova.functional.FieldLens
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.common.bytes.{BytesArray, BytesReference}
-import org.elasticsearch.common.joda.{DateMathParser, FormatDateTimeFormatter, Joda}
-import org.elasticsearch.index.query.{BoolQueryBuilder, QueryBuilder, RangeQueryBuilder}
+import org.elasticsearch.common.joda.{DateMathParser,
+  FormatDateTimeFormatter, Joda}
+import org.elasticsearch.index.query.{BoolQueryBuilder, QueryBuilder,
+  RangeQueryBuilder}
 import org.elasticsearch.rest.{RestChannel, RestResponse, RestStatus}
 import org.elasticsearch.search.aggregations.AggregationBuilder
-import org.elasticsearch.search.aggregations.bucket.histogram.{DateHistogramAggregationBuilder, DateHistogramInterval, ExtendedBounds}
+import org.elasticsearch.search.aggregations.bucket.histogram
+.{DateHistogramAggregationBuilder, DateHistogramInterval, ExtendedBounds}
 import org.elasticsearch.search.builder.SearchSourceBuilder
 
 import scala.annotation.tailrec
@@ -40,26 +43,26 @@ object DateParser {
                    fieldName: String, result: Seq[DateRange],
                    status: RestStatus): Unit =
     channel.sendResponse(new RestResponse() {
-    override def contentType: String = {
-      "application/json"
-    }
+      override def contentType: String = {
+        "application/json"
+      }
 
-    override def content: BytesReference = {
-      import org.json4s._
-      import JsonDSL.WithBigDecimal._
-      import org.json4s.native.JsonMethods._
+      override def content: BytesReference = {
+        import org.json4s._
+        import JsonDSL.WithBigDecimal._
+        import org.json4s.native.JsonMethods._
 
-      val content = ("_metadata" -> ("fieldname" -> fieldName)) ~
-        ("v1alpha/dates_range" -> result.map(_.toMap)) ~
-        ("query_template" -> parse(searchRequest.source().toString(): String))
+        val content = ("_metadata" -> ("fieldname" -> fieldName)) ~
+          ("v1alpha/dates_range" -> result.map(_.toMap)) ~
+          ("query_template" -> parse(searchRequest.source().toString(): String))
 
-      new BytesArray(compact(render(content)))
-    }
+        new BytesArray(compact(render(content)))
+      }
 
-    override def status: RestStatus = {
-      RestStatus.OK
-    }
-  })
+      override def status: RestStatus = {
+        RestStatus.OK
+      }
+    })
 
   def analyze(n: SearchSourceBuilder, fieldName: String,
               nowProvider: LongSupplier): Seq[DateRange] = {
@@ -86,12 +89,13 @@ object DateParser {
 
   def findAggTimes(fieldName: String)(agg: AggregationBuilder): Unit = {
     agg match {
-    case agg: DateHistogramAggregationBuilder =>
-      if(agg.field() == fieldName)
-      agg.extendedBounds(new ExtendedBounds("{{startTime}}", "{{endTime}}"))
-      agg.dateHistogramInterval(
-        new DateHistogramInterval("{{timeGranularity}}"))
-    case _ =>
+      case agg: DateHistogramAggregationBuilder =>
+        if (agg.field() == fieldName) {
+          agg.extendedBounds(new ExtendedBounds("{{startTime}}", "{{endTime}}"))
+          agg.dateHistogramInterval(
+            new DateHistogramInterval("{{timeGranularity}}"))
+        }
+      case _ =>
     }
 
     Parser.getSubAggregations(agg).foreach(findAggTimes(fieldName))
