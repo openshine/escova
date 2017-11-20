@@ -137,4 +137,75 @@ class DateParserTest extends FlatSpec with Matchers {
       DateParser.analyze(n.source(), "date")
   }
 
+  "A query with a nested date field in the query" should "not throw " +
+    "anything" in {
+    val n = Parser.parse(
+      """
+        |{
+        |  "aggs": {
+        |    "byDay": {
+        |      "aggs": {
+        |        "crashes": {
+        |          "filter": {
+        |            "term": {
+        |              "eventName.keyword": {
+        |                "boost": 1,
+        |                "value": "analytics:CrashLog"
+        |              }
+        |            }
+        |          }
+        |        }
+        |      },
+        |      "date_histogram": {
+        |        "field": "@timestamp",
+        |        "interval": "day",
+        |        "keyed": false,
+        |        "min_doc_count": 0,
+        |        "offset": 0,
+        |        "order": {
+        |          "_key": "asc"
+        |        }
+        |      }
+        |    },
+        |    "max_crashes": {
+        |      "max_bucket": {
+        |        "buckets_path": [
+        |          "byDay>crashes._count"
+        |        ],
+        |        "gap_policy": "skip"
+        |      }
+        |    }
+        |  },
+        |  "query": {
+        |    "bool": {
+        |      "adjust_pure_negative": true,
+        |      "boost": 1,
+        |      "disable_coord": false,
+        |      "must": [
+        |        {
+        |          "term": {
+        |            "eventName.keyword": {
+        |              "boost": 1,
+        |              "value": "Error"
+        |            }
+        |          }
+        |        },
+        |        {
+        |          "range": {
+        |            "@timestamp": {
+        |              "lte": "2017-09-15T00:00:00.000Z",
+        |              "gte": "2017-09-01T00:00:00.000Z"
+        |            }
+        |          }
+        |        }
+        |      ]
+        |    }
+        |  }
+        |}
+      """.stripMargin, "index"," type"
+    )
+
+    noException should be thrownBy DateParser.analyze(n.source(), "@timestamp")
+  }
+
 }
