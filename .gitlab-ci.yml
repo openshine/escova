@@ -1,0 +1,29 @@
+stages:
+- test
+- build
+
+variables:
+  SBT_OPTS:
+    -Dsbt.boot.directory=${CI_PROJECT_DIR}/cache/sbt/boot
+    -Dsbt.ivy.home=${CI_PROJECT_DIR}/cache/ivy2
+
+cache:
+  paths:
+    - cache/
+
+tests:
+  image: linkyard/docker-sbt
+  stage: test
+  script:
+    - sbt $SBT_OPTS test core/test esplugin/test
+
+generate plugin:
+  image: linkyard/docker-sbt
+  stage: build
+  script:
+    - sbt $SBT_OPTS "project esplugin" "esplugin 5.6.3" "esplugin 5.6.0" "esplugin 5.6.1" "esplugin 5.5.1"
+
+  artifacts:
+    paths:
+      - modules/escova-esplugin/target/escova*.zip
+    expire_in: 1 week
