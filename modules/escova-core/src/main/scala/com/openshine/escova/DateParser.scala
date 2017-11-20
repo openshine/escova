@@ -5,18 +5,16 @@ import java.time.{Duration, LocalDateTime, ZoneOffset}
 import java.util.function.LongSupplier
 import java.util.{Date, Locale}
 
+import com.openshine.escova.exceptions.NoSuchDateFieldException
 import com.openshine.escova.fixrange._
 import com.openshine.escova.functional.FieldLens
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.common.bytes.{BytesArray, BytesReference}
-import org.elasticsearch.common.joda.{DateMathParser,
-  FormatDateTimeFormatter, Joda}
-import org.elasticsearch.index.query.{BoolQueryBuilder, QueryBuilder,
-  RangeQueryBuilder}
+import org.elasticsearch.common.joda.{DateMathParser, FormatDateTimeFormatter, Joda}
+import org.elasticsearch.index.query.{BoolQueryBuilder, QueryBuilder, RangeQueryBuilder}
 import org.elasticsearch.rest.{RestChannel, RestResponse, RestStatus}
 import org.elasticsearch.search.aggregations.AggregationBuilder
-import org.elasticsearch.search.aggregations.bucket.histogram
-.{DateHistogramAggregationBuilder, DateHistogramInterval, ExtendedBounds}
+import org.elasticsearch.search.aggregations.bucket.histogram.{DateHistogramAggregationBuilder, DateHistogramInterval, ExtendedBounds}
 import org.elasticsearch.search.builder.SearchSourceBuilder
 
 import scala.annotation.tailrec
@@ -75,6 +73,9 @@ object DateParser {
 
     val possibleTimes: Seq[FLTuple] =
       query.map(findQueryTimes(fieldName)).getOrElse(Seq())
+
+    if(possibleTimes.isEmpty)
+      throw NoSuchDateFieldException.fromFieldName(fieldName)
 
     val dates = possibleTimes.flatMap(parseDate)
 
