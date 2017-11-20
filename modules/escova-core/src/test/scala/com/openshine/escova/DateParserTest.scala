@@ -1,9 +1,9 @@
 package com.openshine.escova
 
+import com.openshine.escova.exceptions.NoSuchDateFieldException
 import com.openshine.escova.fixpoint.FirstOfMonth
 import com.openshine.escova.fixrange.{DateUnitMultiple, Month}
-import org.elasticsearch.search.aggregations.bucket.histogram
-.DateHistogramAggregationBuilder
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
@@ -106,6 +106,35 @@ class DateParserTest extends FlatSpec with Matchers {
     ).head.asInstanceOf[DateHistogramAggregationBuilder]
 
     agg.extendedBounds().toString should be("{{startTime}}--{{endTime}}")
+  }
+
+  "A query without any reference to a date field in the query" should "throw " +
+    "an exception when trying to anaylze it" in {
+    val n = Parser.parse(
+      """
+        |{
+        |  "query": {
+        |  },
+        |  "aggs": {
+        |    "1": {
+        |      "terms": {
+        |        "field": "x"
+        |        },
+        |      "aggs": {
+        |        "2": {
+        |          "date_histogram": {
+        |            "field": "date",
+        |            "interval": "month"
+        |          }
+        |        }
+        |      }
+        |    }
+        |  }
+        |}
+      """.stripMargin, "index", "type")
+
+    a[NoSuchDateFieldException] should be thrownBy
+      DateParser.analyze(n.source(), "date")
   }
 
 }
