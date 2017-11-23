@@ -13,7 +13,12 @@ trait ElasticKeys {
     */
   lazy val espluginZip = taskKey[File]("Creates an Elasticsearch plugin")
 
-  lazy val espluginDescriptorFile = taskKey[File]("The plugin description " +
+  lazy val espluginZipBaseName = settingKey[String]("Returns the ElasticSearch plugin name")
+
+  lazy val espluginZipName = settingKey[String]("Returns the ElasticSearch " +
+    "plugin name. Overide this variable to change the zip name")
+
+  lazy val espluginDescriptorFile = settingKey[File]("The plugin description " +
     "file. You usually need not change this value, and instead fill the " +
     "other esplugin values")
 

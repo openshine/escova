@@ -9,7 +9,7 @@ import scala.util.matching.Regex.Match
 /**
   * This Sbt AutoPlugin creates the infrastructure needed to produce
   * an ElasticSearch plugin.
-  * 
+  *
   * The esplugin command is the main user-interaction entry point,
   * which will take zero or one parameter. If no parameters are
   * supplied, the plugin will be built against the version provided as
@@ -23,7 +23,7 @@ import scala.util.matching.Regex.Match
   * {{{
   * $ sbt "esplugin 5.3.6" "esplugin 5.5.0"
   * }}}
-  * 
+  *
   * A description for the plugin must be input via
   * espluginDescription, and if there are newlines, they will be
   * properly converted to the Java-properties file. However, not much
@@ -32,13 +32,13 @@ import scala.util.matching.Regex.Match
   * substitutions are performed, please substitute the provided plugin
   * descriptor file with your own by setting espluginDescriptorFile
   * with a path to your own copy of the file.
-  * 
+  *
   * The plugin gets built by the espluginZip task, which should not be
   * overwritten unless its value needs changing. It will add the
   * appropriate version of the elasticsearch package as a provided
   * dependency, so you MUST NOT depend on ElasticSearch yourself in
   * your libraryDependencies.
-  * 
+  *
   * The projectSettings get augmented with default definitions,
   * including a default elasticsearchVersion and the plugin metadata
   * directory, in which to put processed files, such as the
@@ -50,7 +50,7 @@ import scala.util.matching.Regex.Match
   * file with variables (e.g., to substitute such variables by their
   * values) and that's why the Filter object exists. If that is
   * unnecessary, please send feedback.
-  * 
+  *
   * @author Santiago Saavedra (ssaavedra@openshine.com)
   */
 object ElasticPlugin extends AutoPlugin with ElasticKeys {
@@ -62,14 +62,26 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
       baseDirectory.value / "src" / "main" / "plugin-metadata"
     },
 
-    elasticsearchVersion := System.getProperty("elasticsearch.version", "5.6.3"),
+    elasticsearchVersion := System
+      .getProperty("elasticsearch.version", "5.6.3"),
 
     espluginJavaVersion := "1.8",
 
     espluginHasNativeController := false,
 
     espluginDescriptorFile := baseDirectory.value / "project" /
-        "plugin-descriptor.properties",
+      "plugin-descriptor.properties",
+
+    espluginZipBaseName := {
+      val versionString = System.getProperty(
+        "esplugin.zip.version.string",
+        version.value)
+      s"${name.value}-$versionString"
+    },
+
+    espluginZipName := {
+      s"${espluginZipBaseName.value}-for-es-${elasticsearchVersion.value}.zip"
+    },
 
     espluginZip := {
       val target = Keys.target.value
@@ -77,8 +89,7 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
       val version = Keys.version.value
 
       val distdir: File = target / "elasticsearch"
-      val zipFile: File = target /
-        s"$name-$version-for-es-${elasticsearchVersion.value}.zip"
+      val zipFile: File = target / espluginZipName.value
 
       println(s"Using ElasticSearch version: ${elasticsearchVersion.value}")
 
@@ -127,6 +138,7 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
         .value % "provided"
     )
   )
+
   val esplugin = Command.args("esplugin", "<esversion>", Help(
     "esplugin", ("esplugin", "Build an ElasticSearch plugin"),
     """
@@ -140,6 +152,7 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
         elasticsearchVersion := esv.headOption
           .getOrElse(elasticsearchVersion.value)),
         state)
+
       val (s, _) = Project.extract(newState)
         .runTask(espluginZip in Compile, newState)
       s
@@ -184,6 +197,7 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
         case s => props.get(s.substring(2, s.length - 1)).map(multilineFormat)
       }
     }
+
     private def multilineFormat(in: String): String = {
       in.replaceAll("\\n", Regex.quoteReplacement("\\\\n\\\\\n"))
     }
