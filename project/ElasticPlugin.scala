@@ -147,30 +147,8 @@ object ElasticPlugin extends AutoPlugin with ElasticKeys {
     """.stripMargin
   )) {
     (state, esv) =>
-      val settings: Seq[SettingKey[_]] = Seq(
-        espluginZipBaseName,
-        espluginZipName,
-        espluginDescriptorFile,
-        espluginMetadataDir,
-        espluginJavaVersion,
-        espluginHasNativeController,
-        espluginDescription,
-        espluginClass
-      )
-
-      def setMultiple(l: Seq[SettingKey[_]])
-                     (implicit extracted: Extracted)
-      : Seq[Def.Setting[_]] = {
-        def setsetting[T](s: SettingKey[T])
-                         (implicit extracted: Extracted)
-        : Def.Setting[T] = {s := extracted.get(s)}
-
-        l.map(setsetting(_))
-      }
-
       implicit val extracted: Extracted = Project extract state
       val newState: State = extracted.append(
-        setMultiple(settings) ++
           Seq(
             elasticsearchVersion := esv.headOption
               .getOrElse(elasticsearchVersion.value)
