@@ -2,8 +2,7 @@ package com.openshine.escova
 
 import java.util
 
-import com.openshine.escova.functional.{CostMeasure,
-  SimpleCostMeasure, implicits}
+import com.openshine.escova.functional.{CostMeasure, SimpleCostMeasure, implicits}
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.common.bytes.{BytesArray, BytesReference}
 import org.elasticsearch.common.joda.DateMathParser
@@ -12,12 +11,11 @@ import org.elasticsearch.common.xcontent.{NamedXContentRegistry, XContentParser}
 import org.elasticsearch.rest.RestRequest
 import org.elasticsearch.rest.action.search.RestSearchAction
 import org.elasticsearch.search.SearchModule
-import org.elasticsearch.search.aggregations.bucket.histogram
-.DateHistogramAggregationBuilder
-import org.elasticsearch.search.aggregations.bucket.terms
-.{TermsAggregationBuilder, TermsAggregator}
-import org.elasticsearch.search.aggregations.{AggregationBuilder,
-  AggregatorFactories}
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder
+import org.elasticsearch.search.aggregations.bucket.range.RangeAggregator
+import org.elasticsearch.search.aggregations.bucket.range.date.DateRangeAggregationBuilder
+import org.elasticsearch.search.aggregations.bucket.terms.{TermsAggregationBuilder, TermsAggregator}
+import org.elasticsearch.search.aggregations.{AggregationBuilder, AggregatorFactories}
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.joda.time.DateTimeZone
 
@@ -157,11 +155,44 @@ object Parser {
     SimpleCostMeasure(math.pow(10, requiredSize / 10))
   }
 
+
+  def analyzeRangeDates(field: String, range: RangeAggregator.Range): Double = {
+    import implicits._
+    field match {
+      case "to" => {
+        var res = range.getPrivateFieldValue[Double](field)
+        if (res.isInfinity) res = analyzeRangeDates("toAsStr", range)
+        return res
+      }
+      case "from" => {
+        var res = range.getPrivateFieldValue[Double](field)
+        if (res.isInfinity) res = analyzeRangeDates("fromAsStr", range)
+        return res
+      }
+      case _ => {
+        val dateParser = new DateMathParser(DateParser.DEFAULT_DATE_TIME_FORMATTER)
+        val millis_in_a_day = 1000 * 3600 * 24 * 7
+        val dateExpr = range.getPrivateFieldValue[String](field)
+        dateParser.parse(dateExpr, () => 0L, false, DateTimeZone.UTC) / millis_in_a_day
+      }
+    }
+  }
+
+
+  def dateRangeAggComplexityFactor(t: DateRangeAggregationBuilder)
+  : CostMeasure[Double] = {
+    import scala.collection.JavaConverters._
+    var cost = 0d
+    for (range <- t.ranges().asScala) cost += analyzeRangeDates("to", range) - analyzeRangeDates("from", range)
+    SimpleCostMeasure(cost)
+  }
+
   def analyzeAgg(agg: AggregationBuilder): CostMeasure[Double] = {
     println("Analyzing agg: ", agg.getClass)
     agg match {
       case agg: DateHistogramAggregationBuilder => analyzeDate(agg)
       case agg: TermsAggregationBuilder => termsComplexityFactor(agg)
+      case agg: DateRangeAggregationBuilder => dateRangeAggComplexityFactor(agg)
       case _ => SimpleCostMeasure(1d)
     }
   }

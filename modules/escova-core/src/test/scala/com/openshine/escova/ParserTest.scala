@@ -75,14 +75,39 @@ class ParserTest extends FlatSpec with Matchers {
       |}
     """.stripMargin
 
-  "parser with sample1" should "have complexity 3.0" in {
+  def sample3: String =
+    """
+      |{
+      |    "aggs": {
+      |        "range": {
+      |            "date_range": {
+      |                "field": "date",
+      |                "format": "MM-yyy",
+      |                "ranges": [
+      |                    {
+      |                      "from": "now-2M/M",
+      |                      "to": "now-1M/M"
+      |                    }
+      |                ]
+      |            }
+      |        }
+      |    }
+      |}
+    """.stripMargin
+
+  "parser with sample1" should "have complexity 12.0" in {
     val s = Parser.parse(sample1, "idx", "type")
     assert (Parser.analyze(s.source()).value === 12.0 +- 0.1)
   }
 
-  "parser with sample2" should "have complexity 10" in {
+  "parser with sample2" should "have complexity 110" in {
     val s = Parser.parse(sample2, "idx", "type")
     assert (Parser.analyze(s.source()).value === 110.0 +- 0.1)
+  }
+
+  "parser with sample3" should "have complexity 4" in {
+    val s = Parser.parse(sample3, "idx", "type")
+    assert (Parser.analyze(s.source()).value === 4.0 +- 0.1)
   }
 
   "dateMathExpressionToSeconds" should
