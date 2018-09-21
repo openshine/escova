@@ -1,18 +1,16 @@
 ElasticSearch Correctness and perfOrmance Validator
 ===================================================
 
-Yes, I had to cheat for this acronym to work.
+This software is in the alpha at this point.
 
 ESCOVA is a ElasticSearch query compiler and verifier. It comprises
 two parts: a static analyzer and a performance validator.
-
-**WARNING: This is still an idea and has not yet been correctly implemented**
 
 ESCOVA Query Language
 ---------------------
 
 Our query language is essentialy ElasticSearch's, with some additions
-to make working with ESQB pleasant, so support for variables is
+to make working with [ESQB][esqb] pleasant, so support for variables is
 included in the form of the non-standard construction `{"$var":
 {"name": "x", "type": "int" /* , ... */ }}`
 
@@ -51,3 +49,21 @@ cluster is, but only on your data and your query).
 
 That is, we will compare your query against a couple of baselines that
 are meant to give some meaning to the scores.
+
+
+License
+-------
+
+This software is released under the Apache License Version 2.0, like
+most of Elasticsearch is.
+
+
+Contributing
+------------
+
+Contributions to this repository are welcome in the form of issues
+or Pull Requests. By contributing, you agree to make your
+contribution available under the Apache License Version 2.0.
+
+
+  [esqb]: https://github.com/openshine/python-esqb/
