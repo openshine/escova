@@ -1,5 +1,7 @@
 package com.openshine.escova
 
+import java.util.{GregorianCalendar}
+
 import com.openshine.escova.exceptions.NoSuchDateFieldException
 import com.openshine.escova.fixpoint.FirstOfMonth
 import com.openshine.escova.fixrange.{DateUnitMultiple, Month}
@@ -27,7 +29,9 @@ class DateParserTest extends FlatSpec with Matchers {
         |}
       """.stripMargin, "index", "type")
 
-    val dates: Seq[DateRange] = DateParser.analyze(n.source(), "date")
+
+    val frozenTime = new GregorianCalendar(2018, 4, 2).getTimeInMillis
+    val dates: Seq[DateRange] = DateParser.analyze(n.source(), "date", () => frozenTime)
 
     // println(dates)
 
@@ -113,8 +117,6 @@ class DateParserTest extends FlatSpec with Matchers {
     val n = Parser.parse(
       """
         |{
-        |  "query": {
-        |  },
         |  "aggs": {
         |    "1": {
         |      "terms": {

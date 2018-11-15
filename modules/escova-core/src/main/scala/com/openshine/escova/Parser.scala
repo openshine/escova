@@ -3,6 +3,7 @@ package com.openshine.escova
 import java.util
 
 import com.openshine.escova.functional.{CostMeasure, SimpleCostMeasure, implicits}
+import com.openshine.escova.nodes._
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.common.bytes.{BytesArray, BytesReference}
 import org.elasticsearch.common.joda.DateMathParser
@@ -25,8 +26,6 @@ import scala.collection.JavaConverters._
   * @author Santiago Saavedra (ssaavedra@openshine.com)
   */
 object Parser {
-  private val fsum = functional.monads.ComplexityMeasureMonad.liftA2(sum)
-  private val fmul = functional.monads.ComplexityMeasureMonad.liftA2(mul)
 
   def main(args: Array[String]): Unit = {
     val searchRequest = parse(
@@ -60,6 +59,23 @@ object Parser {
         |  }
         |}
       """.stripMargin, "index1,index2", "type1")
+
+    implicit val defaultConfig = CostConfig(default = NodeCostConfig(
+      whitelistChildren = List("date_histogram", "terms"),
+      maxTreeHeight = 3,
+    ),
+      custom = Map(
+        "terms" -> NodeCostConfig(
+          customNodeConfig = Map(
+            "bucketCountThresholds.requiredSize.op" -> "pow"
+          ),
+          whitelistChildren = List("date_histogram")
+        ),
+        "date_histogram" -> NodeCostConfig(
+          whitelistChildren = List("terms")
+        )
+      )
+    )
 
     val complexity = analyze(searchRequest.source())
 
@@ -113,13 +129,126 @@ object Parser {
     searchRequest
   }
 
-  def analyze(n: SearchSourceBuilder): CostMeasure[Double] = {
-    val aggs = Option(n).flatMap { n => Option(n.aggregations()) }
+  def analyze(n: SearchSourceBuilder)(implicit costConfig: CostConfig): CostMeasure[Double] = {
+    val aggs = Option(n).flatMap(n => Option(n.aggregations()))
 
-    aggs.map(_.getAggregatorFactories.asScala.map(analyze))
-      .map(_.fold(SimpleCostMeasure(0d))(fsum))
-      .getOrElse(SimpleCostMeasure(-1d))
+    val rootAgg = aggs.map(_
+      .getAggregatorFactories
+      .asScala
+      .map(generateTree)
+      .foldLeft(RootAggregation())(_ :+ _))
+      .map(computeTreeCost)
+
+    rootAgg.getOrElse(SimpleCostMeasure(0d))
   }
+
+  def generateTree(agg: AggregationBuilder): TreeNode = {
+    val children = getSubAggregations(agg).map(generateTree)
+    children.foldLeft[TreeNode](
+      LeafAggregation(agg, Double.NaN)
+    )(_ :+ _)
+  }
+
+  def computeInnerTreeCost(tree: TreeNode)(implicit config: CostConfig): TreeNode = {
+    tree match {
+      case SubAggregation(node, cost, children) =>
+        val computedChildren = children.map(computeInnerTreeCost)
+        val withChildren = SubAggregation(node, cost, computedChildren)
+        SubAggregation(node, getNodeCost(config, withChildren), computedChildren)
+
+      case tree @ LeafAggregation(node, cost) =>
+        LeafAggregation(node, getNodeCost(config, tree))
+    }
+  }
+
+  def computeTreeCost(tree: AnalysisTree)(implicit config: CostConfig): AnalysisTree = {
+    tree match {
+      case RootAggregation(children, cost) =>
+        val computedChildren = children.map(computeInnerTreeCost)
+        getRootCost(config, computedChildren)
+
+      case tree: TreeNode =>
+        computeInnerTreeCost(tree)
+    }
+  }
+
+  def getRootCost(config: CostConfig, children: Seq[TreeNode]): RootAggregation = {
+    val configForNode = config.custom.getOrElse("root", config.default)
+
+    if (children.exists(t => !configForNode.isChildAllowed(t))) {
+      // Fail fast on blacklisted children
+      return RootAggregation(children.toVector, Double.MaxValue)
+    }
+
+    val childrenCost = children
+      .map(_.cost)
+      .foldLeft(1d)(
+        binaryOp(configForNode.nodeCostOpAggChild)
+      )
+    val totalNodeCost = binaryOp(
+      configForNode.childrenCostOp
+    )(configForNode.defaultNodeCost, childrenCost)
+
+    RootAggregation(children.toVector, totalNodeCost)
+  }
+
+  def getNodeCost(config: CostConfig, tree: AnalysisTree with TreeNode): Double = {
+    val configForNode = config.custom.getOrElse(tree.node.getName, config.default)
+
+    if (tree.children.exists(t => !configForNode.isChildAllowed(t))) {
+      // Fail fast on blacklisted children
+      return Double.MaxValue
+    }
+
+    val nodeCost = tree.node match {
+      case node: TermsAggregationBuilder =>
+        import implicits._
+        val requiredSize = node
+          .getPrivateFieldValue[TermsAggregator.BucketCountThresholds]("bucketCountThresholds")
+          .getRequiredSize
+
+        val op = configForNode.customNodeConfig.getOrElse("bucketCountThresolds.requiredSize.op", "pow")
+
+        if(op == "pow") {
+          math.pow(10, requiredSize / 10)
+        } else {
+          throw new RuntimeException("TermsAggregationBuilder not correctly configured: missing" +
+            "bucketCountThresolds.requiredSize.op property.")
+        }
+
+      case agg: DateHistogramAggregationBuilder =>
+        val dateExpr = agg.dateHistogramInterval.toString
+        1000 / dateMathExpressionToSeconds(dateExpr)
+
+      case agg: DateRangeAggregationBuilder =>
+        import scala.collection.JavaConverters._
+        agg
+          .ranges()
+          .asScala
+          .map(range =>
+            analyzeRangeDates("to", range) -
+              analyzeRangeDates("from", range))
+          .sum
+
+      case _ => configForNode.defaultNodeCost
+    }
+
+    val childrenCost = tree.children.map(_.cost).foldLeft(1d)(binaryOp(configForNode.nodeCostOpAggChild))
+    val totalNodeCost = binaryOp(configForNode.childrenCostOp)(nodeCost, childrenCost)
+
+    totalNodeCost
+  }
+
+  def binaryOp[T](op: String)(x: T, y: T)(implicit num: Fractional[T])
+  : T = op match {
+    case "sum" => num.plus(x, y)
+    case "minus" => num.minus(x, y)
+    case "mul" => num.times(x, y)
+    case "avg" =>
+      import num.mkNumericOps
+      (x + y) / num.fromInt(2)
+  }
+
 
   /**
     * Hackity hack. For some reason, the Elastic team has not provided the
@@ -137,47 +266,25 @@ object Parser {
     factoriesBuilder.getAggregatorFactories.asScala
   }
 
-  def analyze(agg: AggregationBuilder): CostMeasure[Double] = {
-    val currentAggLevel = analyzeAgg(agg)
-    val nxL = getSubAggregations(agg).map(analyze)
-
-    val nextLevel = nxL.fold(SimpleCostMeasure(1d))(fsum)
-    fmul(currentAggLevel, nextLevel)
-  }
-
-  def termsComplexityFactor(t: TermsAggregationBuilder)
-  : CostMeasure[Double] = {
-    import implicits._
-    val requiredSize = t.getPrivateFieldValue[TermsAggregator
-    .BucketCountThresholds]("bucketCountThresholds")
-      .getRequiredSize
-
-    SimpleCostMeasure(math.pow(10, requiredSize / 10))
-  }
-
-
   def analyzeRangeDates(field: String, range: RangeAggregator.Range): Double = {
     import implicits._
     field match {
-      case "to" => {
+      case "to" =>
         var res = range.getPrivateFieldValue[Double](field)
         if (res.isInfinity) res = analyzeRangeDates("toAsStr", range)
-        return res
-      }
-      case "from" => {
+        res
+      case "from" =>
         var res = range.getPrivateFieldValue[Double](field)
         if (res.isInfinity) res = analyzeRangeDates("fromAsStr", range)
-        return res
-      }
-      case _ => {
+        res
+      case _ =>
         val dateParser = new DateMathParser(DateParser.DEFAULT_DATE_TIME_FORMATTER)
+
         val millis_in_a_day = 1000 * 3600 * 24 * 7
         val dateExpr = range.getPrivateFieldValue[String](field)
         dateParser.parse(dateExpr, () => 0L, false, DateTimeZone.UTC) / millis_in_a_day
-      }
     }
   }
-
 
   def dateRangeAggComplexityFactor(t: DateRangeAggregationBuilder)
   : CostMeasure[Double] = {
@@ -185,16 +292,6 @@ object Parser {
     var cost = 0d
     for (range <- t.ranges().asScala) cost += analyzeRangeDates("to", range) - analyzeRangeDates("from", range)
     SimpleCostMeasure(cost)
-  }
-
-  def analyzeAgg(agg: AggregationBuilder): CostMeasure[Double] = {
-    println("Analyzing agg: ", agg.getClass)
-    agg match {
-      case agg: DateHistogramAggregationBuilder => analyzeDate(agg)
-      case agg: TermsAggregationBuilder => termsComplexityFactor(agg)
-      case agg: DateRangeAggregationBuilder => dateRangeAggComplexityFactor(agg)
-      case _ => SimpleCostMeasure(1d)
-    }
   }
 
   def dateMathExpressionToSeconds(dateExpr: String): Long = {

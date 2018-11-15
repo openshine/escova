@@ -23,6 +23,7 @@ object EscovaHttpService extends App with ToStrict {
   implicit val system: ActorSystem = ActorSystem("escova")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = system.dispatcher
+  implicit val costConfig: CostConfig = pureconfig.loadConfigOrThrow[CostConfig]
 
   val _searchvpath = (d: (Option[String], Option[String]) => Route) => {
     path(Segment / Segment / "_searchv")((c, i) => d(Some(c), Some(i))) ~
@@ -37,7 +38,8 @@ object EscovaHttpService extends App with ToStrict {
           .map { request =>
             import org.json4s.native.JsonMethods._
             val entity = Searchv(
-              ElasticHelper.createSourceBuilder(request))
+              ElasticHelper.createSourceBuilder(request),
+              costConfig)
 
             HttpResponse(
               entity = HttpEntity(

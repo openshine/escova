@@ -3,7 +3,7 @@ package com.openshine.escova.functional
 /**
   * @author Santiago Saavedra (ssaavedra@openshine.com)
   */
-sealed trait CostMeasure[A] {
+trait CostMeasure[A] {
   def value: A
 
   def map(f: A => A)(
