@@ -10,6 +10,9 @@ import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import com.openshine.escova.endpoints.{ParseDate, Searchv}
+import com.typesafe.config.ConfigFactory
+import net.ceedubs.ficus.Ficus._
+import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration.FiniteDuration
@@ -23,7 +26,7 @@ object EscovaHttpService extends App with ToStrict {
   implicit val system: ActorSystem = ActorSystem("escova")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = system.dispatcher
-  implicit val costConfig: CostConfig = pureconfig.loadConfigOrThrow[CostConfig]
+  implicit val costConfig: CostConfig = ConfigFactory.load().as[CostConfig]
 
   val _searchvpath = (d: (Option[String], Option[String]) => Route) => {
     path(Segment / Segment / "_searchv")((c, i) => d(Some(c), Some(i))) ~

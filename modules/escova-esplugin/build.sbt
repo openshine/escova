@@ -1,9 +1,7 @@
-
 name := "escova"
 
 enablePlugins(GitVersioning)
 enablePlugins(ElasticPlugin)
-
 
 espluginClass := "com.openshine.escova.esplugin.EscovaPlugin"
 espluginDescription :=
@@ -12,6 +10,8 @@ espluginDescription :=
   """.stripMargin.trim
 
 libraryDependencies ++= Seq(
+  "com.typesafe" % "config" % "1.3.0",
+  "com.iheart" %% "ficus" % "1.4.3",
   "org.json4s" %% "json4s-ast" % "3.5.3",
   "org.json4s" %% "json4s-core" % "3.5.3",
   "org.json4s" %% "json4s-native" % "3.5.3"
