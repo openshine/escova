@@ -36,6 +36,9 @@ public class EscovaCostCalculatorAction extends BaseRestHandler {
         costConfig = PluginConfig.toNative(cfg);
         dateParserHandler = new DateParserHandler(settings);
 
+        logger.info("ESCOVA has been successfully loaded.");
+        logger.info("The loaded configuration is: " + costConfig);
+
         controller.registerHandler(GET, "/_escova/parse_dates",
                 dateParserHandler);
         controller.registerHandler(POST, "/_escova/parse_dates",
