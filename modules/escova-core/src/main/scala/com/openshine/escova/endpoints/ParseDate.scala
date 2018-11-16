@@ -11,8 +11,8 @@ import org.json4s.native.JsonMethods.parse
 object ParseDate {
   def apply(searchSourceBuilder: SearchSourceBuilder,
             fieldName: String): JValue = {
-    val result = com.openshine.escova.DateParser.analyze(
-      searchSourceBuilder, fieldName)
+    val result =
+      com.openshine.escova.DateParser.analyze(searchSourceBuilder, fieldName)
 
     Map[String, JValue](
       "_metadata" -> Map("fieldname" -> fieldName),

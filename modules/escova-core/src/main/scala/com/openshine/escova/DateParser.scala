@@ -10,11 +10,23 @@ import com.openshine.escova.fixrange._
 import com.openshine.escova.functional.FieldLens
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.common.bytes.{BytesArray, BytesReference}
-import org.elasticsearch.common.joda.{DateMathParser, FormatDateTimeFormatter, Joda}
-import org.elasticsearch.index.query.{BoolQueryBuilder, QueryBuilder, RangeQueryBuilder}
+import org.elasticsearch.common.joda.{
+  DateMathParser,
+  FormatDateTimeFormatter,
+  Joda
+}
+import org.elasticsearch.index.query.{
+  BoolQueryBuilder,
+  QueryBuilder,
+  RangeQueryBuilder
+}
 import org.elasticsearch.rest.{RestChannel, RestResponse, RestStatus}
 import org.elasticsearch.search.aggregations.AggregationBuilder
-import org.elasticsearch.search.aggregations.bucket.histogram.{DateHistogramAggregationBuilder, DateHistogramInterval, ExtendedBounds}
+import org.elasticsearch.search.aggregations.bucket.histogram.{
+  DateHistogramAggregationBuilder,
+  DateHistogramInterval,
+  ExtendedBounds
+}
 import org.elasticsearch.search.builder.SearchSourceBuilder
 
 import scala.annotation.tailrec
@@ -27,9 +39,9 @@ import scala.language.implicitConversions
 object DateParser {
   type ConvertibleToTime = String
   type FLTuple = (
-    FieldLens[QueryBuilder, ConvertibleToTime],
+      FieldLens[QueryBuilder, ConvertibleToTime],
       FieldLens[QueryBuilder, ConvertibleToTime]
-    )
+  )
   val DEFAULT_DATE_TIME_FORMATTER: FormatDateTimeFormatter =
     Joda.forPattern("strict_date_optional_time||epoch_millis", Locale.ROOT)
   val dateParser = new DateMathParser(DEFAULT_DATE_TIME_FORMATTER)
@@ -37,8 +49,10 @@ object DateParser {
   def analyze(n: SearchSourceBuilder, fieldName: String): Seq[DateRange] =
     analyze(n, fieldName, DateParser.now)
 
-  def sendResponse(channel: RestChannel, searchRequest: SearchRequest,
-                   fieldName: String, result: Seq[DateRange],
+  def sendResponse(channel: RestChannel,
+                   searchRequest: SearchRequest,
+                   fieldName: String,
+                   result: Seq[DateRange],
                    status: RestStatus): Unit =
     channel.sendResponse(new RestResponse() {
       override def contentType: String = {
@@ -62,19 +76,25 @@ object DateParser {
       }
     })
 
-  def analyze(n: SearchSourceBuilder, fieldName: String,
+  def analyze(n: SearchSourceBuilder,
+              fieldName: String,
               nowProvider: LongSupplier): Seq[DateRange] = {
     implicit val _np: LongSupplier = nowProvider
-    val query = Option(n).flatMap { n => Option(n.query()) }
-    val aggs = Option(n).flatMap { n => Option(n.aggregations()) }
+    val query = Option(n).flatMap { n =>
+      Option(n.query())
+    }
+    val aggs = Option(n).flatMap { n =>
+      Option(n.aggregations())
+    }
 
-    aggs.toList.flatMap(_.getAggregatorFactories.asScala.toList)
+    aggs.toList
+      .flatMap(_.getAggregatorFactories.asScala.toList)
       .foreach(findAggTimes(fieldName))
 
     val possibleTimes: Seq[FLTuple] =
       query.map(findQueryTimes(fieldName)).getOrElse(Seq())
 
-    if(possibleTimes.isEmpty)
+    if (possibleTimes.isEmpty)
       throw NoSuchDateFieldException.fromFieldName(fieldName)
 
     val dates = possibleTimes.flatMap(parseDate)
@@ -102,13 +122,12 @@ object DateParser {
     Parser.getSubAggregations(agg).foreach(findAggTimes(fieldName))
   }
 
-
   def findQueryTimes(fieldName: String): QueryBuilder => Seq[FLTuple] = {
     case query: RangeQueryBuilder =>
       if (query.fieldName() == fieldName) {
         Seq(
-          (FieldLens(query)(_.from().toString, _.from), FieldLens(query)(_.to()
-            .toString, _.to)))
+          (FieldLens(query)(_.from().toString, _.from),
+           FieldLens(query)(_.to().toString, _.to)))
       } else {
         Seq()
       }
@@ -123,8 +142,7 @@ object DateParser {
     * @param t the date formatted somehow
     * @return the date in milliseconds
     */
-  def parseDate(t: FLTuple)
-               (implicit now: LongSupplier): Seq[DateRange] = {
+  def parseDate(t: FLTuple)(implicit now: LongSupplier): Seq[DateRange] = {
     val (d1, d2) = t
 
     dateRangeEvaluator(
@@ -160,14 +178,14 @@ object DateParser {
           time.len.between(dd1, dd2) > 0
         }
         .map { time: DateUnit =>
-          DateUnitMultiple(
-            time.len.between(dd1, dd2).toInt,
-            time)
+          DateUnitMultiple(time.len.between(dd1, dd2).toInt, time)
         }
         .toList
 
       val fromFixedPointInTime = fixpoint.all
-        .filter { time: fixpoint.DateFixPoint => time.matches(dd1) }
+        .filter { time: fixpoint.DateFixPoint =>
+          time.matches(dd1)
+        }
 
       fixedTime ++ fromFixedPointInTime
     }
@@ -176,7 +194,8 @@ object DateParser {
   def now: LongSupplier = {
     val frozenTime = new Date().getTime
 
-    () => frozenTime
+    () =>
+      frozenTime
   }
 
 }

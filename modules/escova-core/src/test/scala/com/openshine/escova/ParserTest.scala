@@ -95,62 +95,66 @@ class ParserTest extends FlatSpec with Matchers {
       |}
     """.stripMargin
 
-  implicit val config = CostConfig(default = NodeCostConfig(
-    whitelistChildren = List(),
-    blacklistChildren = List(),
-  ))
+  implicit val config = CostConfig(
+    default = NodeCostConfig(
+      whitelistChildren = List(),
+      blacklistChildren = List(),
+    ))
 
   "parser with sample1" should "have complexity 13.0" in {
     val s = Parser.parse(sample1, "idx", "type")
-    assert (Parser.analyze(s.source()).value === 13.0 +- 0.1)
+    assert(Parser.analyze(s.source()).value === 13.0 +- 0.1)
   }
 
   "parser with sample2" should "have complexity 111" in {
     val s = Parser.parse(sample2, "idx", "type")
-    assert (Parser.analyze(s.source()).value === 111.0 +- 0.1)
+    assert(Parser.analyze(s.source()).value === 111.0 +- 0.1)
   }
 
   "parser with sample3" should "have complexity 5" in {
     val s = Parser.parse(sample3, "idx", "type")
-    assert (Parser.analyze(s.source()).value === 5.0 +- 0.1)
+    assert(Parser.analyze(s.source()).value === 5.0 +- 0.1)
   }
 
   "parser with sample1" should "have maximum complexity if nodes are not whitelisted" in {
-    implicit val config = CostConfig(default = NodeCostConfig(
-      whitelistChildren = List("date_histogram", "terms")
-    ))
+    implicit val config = CostConfig(
+      default = NodeCostConfig(
+        whitelistChildren = List("date_histogram", "terms")
+      ))
     val s = Parser.parse(sample1, "idx", "type")
-    assert (Parser.analyze(s.source()).value === Double.MaxValue)
+    assert(Parser.analyze(s.source()).value === Double.MaxValue)
   }
 
   "parser with sample3" should "have complexity 4" in {
     val s = Parser.parse(sample3, "idx", "type")
-    assert (Parser.analyze(s.source()).value === 4.0 +- 0.1)
+    assert(Parser.analyze(s.source()).value === 4.0 +- 0.1)
   }
 
   "dateMathExpressionToSeconds" should
     "have a second equal a second (1000 ms)" in {
-    Parser.dateMathExpressionToSeconds("1s") should be (1000L)
+    Parser.dateMathExpressionToSeconds("1s") should be(1000L)
   }
 
   it should "have a month equal its millisecond amount" in {
-    Parser.dateMathExpressionToSeconds("1M") should equal (
+    Parser.dateMathExpressionToSeconds("1M") should equal(
       31L * 24L * 3600L * 1000L)
   }
 
   it should "have a year equal its millisecond amount" in {
-    Parser.dateMathExpressionToSeconds("1y") should equal (
+    Parser.dateMathExpressionToSeconds("1y") should equal(
       365L * 24L * 3600L * 1000L
     )
   }
 
   it should
     "support names such as 'month' or 'year' instead of '1M' or '1y'" in {
-    Parser.dateMathExpressionToSeconds("month") should equal(Parser
-      .dateMathExpressionToSeconds("1M"))
+    Parser.dateMathExpressionToSeconds("month") should equal(
+      Parser
+        .dateMathExpressionToSeconds("1M"))
 
-    Parser.dateMathExpressionToSeconds("year") should equal(Parser
-      .dateMathExpressionToSeconds("1y"))
+    Parser.dateMathExpressionToSeconds("year") should equal(
+      Parser
+        .dateMathExpressionToSeconds("1y"))
   }
 
 }

@@ -27,17 +27,19 @@ class DateParserTest extends FlatSpec with Matchers {
         |    }
         |  }
         |}
-      """.stripMargin, "index", "type")
-
+      """.stripMargin,
+      "index",
+      "type"
+    )
 
     val frozenTime = new GregorianCalendar(2018, 4, 2).getTimeInMillis
-    val dates: Seq[DateRange] = DateParser.analyze(n.source(), "date", () => frozenTime)
+    val dates: Seq[DateRange] =
+      DateParser.analyze(n.source(), "date", () => frozenTime)
 
     // println(dates)
 
     dates should equal(List(DateUnitMultiple(1, Month), FirstOfMonth))
   }
-
 
   "DateParser with an aggregate" should "add extended_bounds to the " +
     "aggregate" in {
@@ -61,11 +63,17 @@ class DateParserTest extends FlatSpec with Matchers {
         |    }
         |  }
         |}
-      """.stripMargin, "index", "type")
+      """.stripMargin,
+      "index",
+      "type"
+    )
 
     val dates = DateParser.analyze(n.source(), "date")
-    val agg: DateHistogramAggregationBuilder = n.source()
-      .aggregations().getAggregatorFactories.get(0)
+    val agg: DateHistogramAggregationBuilder = n
+      .source()
+      .aggregations()
+      .getAggregatorFactories
+      .get(0)
       .asInstanceOf[DateHistogramAggregationBuilder]
 
     agg.extendedBounds().toString should be("{{startTime}}--{{endTime}}")
@@ -100,14 +108,19 @@ class DateParserTest extends FlatSpec with Matchers {
         |    }
         |  }
         |}
-      """.stripMargin, "index", "type")
+      """.stripMargin,
+      "index",
+      "type"
+    )
 
     val dates = DateParser.analyze(n.source(), "date")
 
-    val agg: DateHistogramAggregationBuilder = Parser.getSubAggregations(
-      n.source().aggregations()
-        .getAggregatorFactories.get(0)
-    ).head.asInstanceOf[DateHistogramAggregationBuilder]
+    val agg: DateHistogramAggregationBuilder = Parser
+      .getSubAggregations(
+        n.source().aggregations().getAggregatorFactories.get(0)
+      )
+      .head
+      .asInstanceOf[DateHistogramAggregationBuilder]
 
     agg.extendedBounds().toString should be("{{startTime}}--{{endTime}}")
   }
@@ -133,7 +146,10 @@ class DateParserTest extends FlatSpec with Matchers {
         |    }
         |  }
         |}
-      """.stripMargin, "index", "type")
+      """.stripMargin,
+      "index",
+      "type"
+    )
 
     a[NoSuchDateFieldException] should be thrownBy
       DateParser.analyze(n.source(), "date")
@@ -204,7 +220,9 @@ class DateParserTest extends FlatSpec with Matchers {
         |    }
         |  }
         |}
-      """.stripMargin, "index"," type"
+      """.stripMargin,
+      "index",
+      " type"
     )
 
     noException should be thrownBy DateParser.analyze(n.source(), "@timestamp")

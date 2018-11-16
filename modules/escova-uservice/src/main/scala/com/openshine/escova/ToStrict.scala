@@ -17,8 +17,8 @@ import scala.util.{Failure, Success}
   */
 trait ToStrict extends BasicDirectives with Directives {
 
-  def makeStrict(timeout: FiniteDuration)
-                (implicit fm: Materializer): Directive1[HttpRequest] = {
+  def makeStrict(timeout: FiniteDuration)(
+      implicit fm: Materializer): Directive1[HttpRequest] = {
     extractStrict(timeout).flatMap { strictRequest =>
       mapRequest((r: HttpRequest) => strictRequest).tflatMap { u =>
         provide(strictRequest)
@@ -26,9 +26,8 @@ trait ToStrict extends BasicDirectives with Directives {
     }
   }
 
-  private def extractStrict(timeout: FiniteDuration)
-                           (implicit fm: Materializer)
-  : Directive1[HttpRequest] = {
+  private def extractStrict(timeout: FiniteDuration)(
+      implicit fm: Materializer): Directive1[HttpRequest] = {
     for {
       request <- extractRequest
       strictT <- onComplete(strictify(request, timeout))
@@ -41,18 +40,17 @@ trait ToStrict extends BasicDirectives with Directives {
     }
   }
 
-  private def strictify(request: HttpRequest,
-                        duration: FiniteDuration)
-                       (implicit fm: Materializer)
-  : Future[Strict] = {
+  private def strictify(request: HttpRequest, duration: FiniteDuration)(
+      implicit fm: Materializer): Future[Strict] = {
     request.entity match {
-      case e@HttpEntity.Strict(contentType: ContentType, data: ByteString) =>
+      case e @ HttpEntity.Strict(contentType: ContentType, data: ByteString) =>
         Future.successful(e)
-      case e@HttpEntity.Default(contentType: ContentType, contentLength: Long,
-      data: Source[ByteString, Any]) =>
+      case e @ HttpEntity.Default(contentType: ContentType,
+                                  contentLength: Long,
+                                  data: Source[ByteString, Any]) =>
         e.toStrict(duration)
-      case e@HttpEntity.Chunked(contentType: ContentType,
-      chunks: Source[ChunkStreamPart, Any]) =>
+      case e @ HttpEntity.Chunked(contentType: ContentType,
+                                  chunks: Source[ChunkStreamPart, Any]) =>
         e.toStrict(duration)
     }
   }

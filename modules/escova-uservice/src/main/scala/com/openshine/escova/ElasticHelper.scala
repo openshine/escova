@@ -21,8 +21,8 @@ import scala.language.implicitConversions
   * @author Santiago Saavedra (ssaavedra@openshine.com)
   */
 object ElasticHelper {
-  val searchModule = new SearchModule(Settings.EMPTY, false, java.util
-    .Collections.emptyList())
+  val searchModule =
+    new SearchModule(Settings.EMPTY, false, java.util.Collections.emptyList())
   val registry = new NamedXContentRegistry(searchModule.getNamedXContents)
   val jsonHeaders: java.util.Map[String, java.util.List[String]] = Map(
     "Content-Type" -> List("application/json").asJava
@@ -43,8 +43,9 @@ object ElasticHelper {
       override def hasContent: Boolean = true
 
       override def content(): BytesReference = {
-        requestToBytesArray(request.entity
-          .asInstanceOf[HttpEntity.Strict])
+        requestToBytesArray(
+          request.entity
+            .asInstanceOf[HttpEntity.Strict])
       }
 
       override def uri(): String = url
@@ -66,8 +67,10 @@ object ElasticHelper {
     restRequest.withContentOrSourceParamParserOrNull(
       (parser: XContentParser) =>
         RestSearchAction.parseSearchRequest(
-          searchRequest, restRequest, parser
-        )
+          searchRequest,
+          restRequest,
+          parser
+      )
     )
 
     searchRequest.source()

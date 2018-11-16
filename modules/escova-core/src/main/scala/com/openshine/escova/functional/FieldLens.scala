@@ -7,8 +7,7 @@ package com.openshine.escova.functional
   */
 class FieldLens[+C, F](instance: C,
                        getter: (C) => (F),
-                       setter: (C) => (F) => (C)
-                      ) {
+                       setter: (C) => (F) => (C)) {
 
   private val _instance: C = instance
 
@@ -20,8 +19,8 @@ class FieldLens[+C, F](instance: C,
 
 object FieldLens {
   def apply[C, F](instance: C)(
-    getter: (C) => (F),
-    setter: (C) => (F) => (C)
+      getter: (C) => (F),
+      setter: (C) => (F) => (C)
   ): FieldLens[C, F] =
     new FieldLens[C, F](instance, getter, setter)
 }

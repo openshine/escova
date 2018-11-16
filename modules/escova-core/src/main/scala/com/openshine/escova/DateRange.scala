@@ -8,7 +8,7 @@ trait DateRange {
 }
 
 case class DateRangeMultiple(multiplicity: Int, base: DateRange)
-  extends DateRange {
+    extends DateRange {
   override def toMap: Map[String, String] =
     base.toMap ++ Map("type" -> "range", "amount" -> multiplicity.toString)
 }

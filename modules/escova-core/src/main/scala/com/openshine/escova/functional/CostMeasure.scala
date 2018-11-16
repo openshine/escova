@@ -7,16 +7,14 @@ trait CostMeasure[A] {
   def value: A
 
   def map(f: A => A)(
-    implicit a: Monad[CostMeasure]
+      implicit a: Monad[CostMeasure]
   ): CostMeasure[A] = a.unit(f(value))
 
-  def flatMap[B](f: A => CostMeasure[B]):
-  CostMeasure[B] = f(value)
+  def flatMap[B](f: A => CostMeasure[B]): CostMeasure[B] = f(value)
 
 }
 
-case class SimpleCostMeasure[A](_value: A) extends
-  CostMeasure[A] {
+case class SimpleCostMeasure[A](_value: A) extends CostMeasure[A] {
 
   override def value: A = _value
 }

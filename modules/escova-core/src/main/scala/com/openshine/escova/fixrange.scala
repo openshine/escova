@@ -10,11 +10,17 @@ import org.elasticsearch.common.xcontent.XContent
   */
 object fixrange {
   val all = List(
-    Year, Month, Week, Day, Hour, Minute, Second
+    Year,
+    Month,
+    Week,
+    Day,
+    Hour,
+    Minute,
+    Second
   )
 
   sealed abstract class DateUnit(val name: String, val len: ChronoUnit)
-    extends DateRange {
+      extends DateRange {
     def toMap: Map[String, String] = {
       Map(
         "type" -> "unit",
@@ -25,12 +31,12 @@ object fixrange {
   }
 
   case class DateUnitMultiple(multiplicity: Int, base: DateUnit)
-    extends DateUnit(base.name, base.len) {
+      extends DateUnit(base.name, base.len) {
     override def toMap: Map[String, String] =
       super.toMap ++ Map("amount" -> multiplicity.toString)
   }
 
-case object Second extends DateUnit("second", ChronoUnit.SECONDS)
+  case object Second extends DateUnit("second", ChronoUnit.SECONDS)
 
   case object Minute extends DateUnit("minute", ChronoUnit.MINUTES)
 

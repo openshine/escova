@@ -9,18 +9,18 @@ import scala.reflect.ClassTag
   */
 object implicits {
 
-  implicit class PrivateMethodAccessor[A](val instance: A)(implicit c: ClassTag[A]) {
+  implicit class PrivateMethodAccessor[A](val instance: A)(
+      implicit c: ClassTag[A]) {
     def getPrivateFieldValue[B](fieldName: String): B = {
-      AccessController.doPrivileged(
-        new PrivilegedAction[B] {
-          override def run(): B = {
-            val f: java.lang.reflect.Field =
-              c.runtimeClass.getDeclaredField(fieldName)
+      AccessController.doPrivileged(new PrivilegedAction[B] {
+        override def run(): B = {
+          val f: java.lang.reflect.Field =
+            c.runtimeClass.getDeclaredField(fieldName)
 
-            f.setAccessible(true)
-            f.get(instance).asInstanceOf[B]
-          }
-        })
+          f.setAccessible(true)
+          f.get(instance).asInstanceOf[B]
+        }
+      })
     }
   }
 

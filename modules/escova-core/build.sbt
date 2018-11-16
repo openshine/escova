@@ -1,4 +1,3 @@
-
 name := "escova-core"
 
 enablePlugins(GitVersioning)
