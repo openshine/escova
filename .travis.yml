@@ -1,0 +1,30 @@
+language: scala
+sudo: false
+jdk: oraclejdk8
+env:
+- ELASTIC_VERSION=5.6.3
+- ELASTIC_VERSION=5.6.8
+- ELASTIC_VERSION=5.6.10
+- ELASTIC_VERSION=5.6.13
+scala:
+- 2.12.4
+sbt_args: "-mem 1500"
+script:
+- sbt "++ ${TRAVIS_SCALA_VERSION}" test "project esplugin" "esplugin ${ELASTIC_VERSION}"
+cache:
+  directories:
+  - "$HOME/.ivy2/cache"
+  - "$HOME/.sbt/launchers"
+before_cache:
+- find $HOME/.sbt -name "*.lock" | xargs rm
+- find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+deploy:
+  provider: releases
+  api_key:
+    secure: bqLrJZb2wDpVqf8I/T0Zjlar3ahNjykoPw0bx9YV756+8EuHAJ66H39rgwAa7dOwMyRbf+JFZQRim9TcqEs04lX4izeoE8qYTYKV/TuD4KqZNvlwajNRlO54G9U1+5HrStVrrBlcY/08mxRRr/QvGRXntlGxDb48za9jM5exbU1qyGQ5vHgh+LNQBPeLyGxw56ZfOlZt4gUBevBVgxof37g4frRL1chCRbjTJ+CI4xIzPIQO9uqbfzptTUPhVFGSDIm5pNc09zzwqpYfT4mWMYUSD+BhKk7HgBshh8k0SNa7lklT0nZOhh6ntGEHFltuixC6piOm6A8F0sssQ0dl2pYst4AF9zwRxTE6EHf8pgrdCF/WtJRLQuiFM0lVgsFuhNgegcdSI0XSa8FuhN6B0+ha5Ro4PrHzpd22AAYQ6jZFDRW3Y0eOzB/Bs73Q/BRkLxm8yXHespsHGoWLuEamlRqg8SK+QAkYUWFua99a1XlRcpbTcMbQdijkQZWWcRQPSlvp++HYCTLWutPnHH5PvqaLjzmQ1OPfGONvqM3HIzjPNJ2I/5Ti2BILHrfywZcH4VfnGdgPqtKN4FfYb3thgHQ0q+gBM/m25VnQmM8CG+8k777K7B0x9WJL0C+8i2n0UfwsIEwOztqWcqmk7kMl4odZZ9yoYopwRkMJkkIcrO4=
+  file_glob: true
+  file: modules/escova-esplugin/target/escova-*-for-es-*.zip
+  skip_cleanup: true
+  on:
+    tags: true
+    repo: openshine/escova

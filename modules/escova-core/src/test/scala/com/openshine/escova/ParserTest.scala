@@ -125,11 +125,6 @@ class ParserTest extends FlatSpec with Matchers {
     assert(Parser.analyze(s.source()).value === Double.MaxValue)
   }
 
-  "parser with sample3" should "have complexity 4" in {
-    val s = Parser.parse(sample3, "idx", "type")
-    assert(Parser.analyze(s.source()).value === 4.0 +- 0.1)
-  }
-
   "dateMathExpressionToSeconds" should
     "have a second equal a second (1000 ms)" in {
     Parser.dateMathExpressionToSeconds("1s") should be(1000L)
