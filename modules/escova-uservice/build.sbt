@@ -1,6 +1,7 @@
 name := "escova-akka-uservice"
 
 enablePlugins(GitVersioning)
+enablePlugins(DockerPlugin)
 
 libraryDependencies ++= Seq(
   "org.elasticsearch" % "elasticsearch" % "5.6.3",
