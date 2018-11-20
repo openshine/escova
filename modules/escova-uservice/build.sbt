@@ -1,5 +1,11 @@
 name := "escova-akka-uservice"
 
+organization := "com.openshine"
+
+organizationName := "openshine"
+
+organizationHomepage := Some(url("http://www.openshine.com"))
+
 enablePlugins(GitVersioning)
 enablePlugins(DockerPlugin)
 
@@ -21,4 +27,21 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.4" % Test,
   "org.scalactic" %% "scalactic" % "3.0.4" % Test,
   "com.typesafe.akka" %% "akka-http-testkit" % "10.1.5" % Test
+)
+
+licenses := Seq(
+  "Apache-2.0" -> url("http://www.apache.org/licenses-LICENSE-2.0.txt"),
+  "MIT License" -> url("http://www.opensource.org/licenses/mit-license.php")
+)
+
+developers := List(
+  Developer("ssaavedra",
+            "Santiago Saavedra",
+            "@ssaavedra",
+            url("https://github.com/ssaavedra"))
+)
+
+scmInfo := Some(
+  ScmInfo(url("https://github.com/openshine/escova"),
+          "git@github.com:openshine/escova.git")
 )
