@@ -1,5 +1,11 @@
 name := "escova-core"
 
+organization := "com.openshine"
+
+organizationName := "openshine"
+
+organizationHomepage := Some(url("http://www.openshine.com"))
+
 enablePlugins(GitVersioning)
 
 libraryDependencies ++= Seq(
@@ -19,4 +25,20 @@ libraryDependencies ++= Seq(
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.4" % "test",
   "org.scalactic" %% "scalactic" % "3.0.4" % "test"
+)
+
+licenses := Seq(
+  "Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")
+)
+
+developers := List(
+  Developer("ssaavedra",
+            "Santiago Saavedra",
+            "@ssaavedra",
+            url("https://github.com/ssaavedra"))
+)
+
+scmInfo := Some(
+  ScmInfo(url("https://github.com/openshine/escova"),
+          "git@github.com:openshine/escova.git")
 )

@@ -16,6 +16,12 @@ lazy val core = project
   .in(file("modules") / "escova-core")
   .settings(common)
   .settings(Seq(exportJars := true))
+  .settings(Seq(
+    credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+    publishArtifact in Test := false,
+    bintrayOrganization := Some("openshine"),
+    bintrayRepository := "maven"
+  ))
 
 lazy val uservice = project
   .in(file("modules") / "escova-uservice")
