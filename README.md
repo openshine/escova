@@ -157,9 +157,14 @@ are meant to give some meaning to the scores.
 License
 -------
 
-This software is released under the Apache License Version 2.0, like
-most of Elasticsearch is.
+This software is released under the [Apache License Version
+2.0](https://opensource.org/licenses/Apache-2.0), like most of
+Elasticsearch is.
 
+The code of the Escova microservice example (modules/escova-uservice/)
+is released both under the [Apache License Version
+2.0](https://opensource.org/licenses/Apache-2.0), as well as under the
+[MIT License](https://opensource.org/licenses/MIT).
 
 Contributing
 ------------
