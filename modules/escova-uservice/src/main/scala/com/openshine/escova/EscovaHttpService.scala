@@ -52,8 +52,22 @@ object EscovaHttpService extends App with ToStrict {
       .runWith(Sink.head)
       .flatMap(context.complete(_))
   }
+
+  val ping = path("_ping") { context =>
+    Source.single(context.request)
+      .map { request =>
+        import org.json4s.JsonDSL.WithDouble._
+        import org.json4s.native.JsonMethods._
+        HttpResponse(
+          entity = HttpEntity(contentType = `application/json`,
+            compact(render(Map("status" -> "ok")))))
+      }
+      .runWith(Sink.head)
+      .flatMap(context.complete(_))
+  }
+
   val proxy = {
-    searchvpath ~
+    searchvpath ~ ping ~
       path("_escova" / "parse_dates") {
         parameter("dateFieldName") { fieldName =>
           toStrictEntity(new FiniteDuration(5, TimeUnit.SECONDS)) { context =>
