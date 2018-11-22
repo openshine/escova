@@ -7,6 +7,7 @@ organizationName := "openshine"
 organizationHomepage := Some(url("http://www.openshine.com"))
 
 enablePlugins(GitVersioning)
+enablePlugins(JavaAppPackaging)
 enablePlugins(DockerPlugin)
 
 libraryDependencies ++= Seq(
