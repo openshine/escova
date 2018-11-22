@@ -1,0 +1,61 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      {{- if .Values.image.secret }}
+      imagePullSecrets:
+        - name: {{ .Values.image.secret }}
+      {{- end }}
+      volumes:
+        - name: escova-config
+          configMap:
+            name: {{ template "fullname" . }}-cm
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.internalPort }}
+          command:
+            - -Dconfig.file=/etc/escova/escova.conf
+          volumeMounts:
+            - name: escova-config
+              mountPath: /etc/escova
+          env:
+            {{- if .Values.backend.enabled }}
+            - name: ESCOVA_BACKEND_PORT
+              value: {{ .Values.backend.port }}
+            - name: ESCOVA_BACKEND_HOST
+              value: {{ .Values.backend.host }}
+            {{- endif }}
+            - name: ESCOVA_BIND_ADDRESS
+              value: "0.0.0.0"
+            - name: ESCOVA_BIND_PORT
+              value: {{ .Values.service.internalPort | quote }}
+          livenessProbe:
+            httpGet:
+              path: /_ping
+              port: {{ .Values.service.internalPort }}
+          readinessProbe:
+            httpGet:
+              path: /_ping
+              port: {{ .Values.service.internalPort }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}
