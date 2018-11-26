@@ -21,11 +21,11 @@ before_cache:
 - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
 deploy:
   provider: releases
-  api_key:
-    secure: bqLrJZb2wDpVqf8I/T0Zjlar3ahNjykoPw0bx9YV756+8EuHAJ66H39rgwAa7dOwMyRbf+JFZQRim9TcqEs04lX4izeoE8qYTYKV/TuD4KqZNvlwajNRlO54G9U1+5HrStVrrBlcY/08mxRRr/QvGRXntlGxDb48za9jM5exbU1qyGQ5vHgh+LNQBPeLyGxw56ZfOlZt4gUBevBVgxof37g4frRL1chCRbjTJ+CI4xIzPIQO9uqbfzptTUPhVFGSDIm5pNc09zzwqpYfT4mWMYUSD+BhKk7HgBshh8k0SNa7lklT0nZOhh6ntGEHFltuixC6piOm6A8F0sssQ0dl2pYst4AF9zwRxTE6EHf8pgrdCF/WtJRLQuiFM0lVgsFuhNgegcdSI0XSa8FuhN6B0+ha5Ro4PrHzpd22AAYQ6jZFDRW3Y0eOzB/Bs73Q/BRkLxm8yXHespsHGoWLuEamlRqg8SK+QAkYUWFua99a1XlRcpbTcMbQdijkQZWWcRQPSlvp++HYCTLWutPnHH5PvqaLjzmQ1OPfGONvqM3HIzjPNJ2I/5Ti2BILHrfywZcH4VfnGdgPqtKN4FfYb3thgHQ0q+gBM/m25VnQmM8CG+8k777K7B0x9WJL0C+8i2n0UfwsIEwOztqWcqmk7kMl4odZZ9yoYopwRkMJkkIcrO4=
   file_glob: true
   file: modules/escova-esplugin/target/escova-*-for-es-*.zip
   skip_cleanup: true
+  api_key:
+    secure: bvlvYasrYzPhNib0dyil/UCcdA4YFsnnFHyLqHN780qJyZZ8aVTkL0Bv4DScTskeJP6VYbMCvjyfo5lRDG/pcbHtHTxARZ+bWqAIH7ChYabK1gbbpWntL+0kPmLcIFlgnq3LQr5A0omcuW0WMrgXm87/w+vkr5fAER2N1H4fLFP+PtKR6CnreONOZO0CPC82q5qHka2ufAGXo9gO0q0QIY6ubJ9immS6GxpLBuIc4L0Xz+/YZtvSIqe9TymoPr8x/b8E8rLoXEfnwSx7//Ks+352XrNIRC8VfSlkWzJ6bXsdXgayGhod4c1RkJ9zBzlSRwOO/5fPP78jwL5ao1irPI6oJJX8rNLxpT0LU1+TJf+RTKCngZrjMhSDVmvSql+wNvJk74SGzSUH+IIWkXU8bqMYt+KkYDndOPgDvOYHljO+nMsxmW7V13IKVuzO4nGgX2MPEKv+0f8dHtPxggLqOSLPEjmAVe/VyK8Sow8s+cCuFayyJSlQhUUzE4rxMqKUkK2729hWHlFdqqNhbA6+2/QZEfkX7h8pzcIy7PwE6DnNq4uka7xrb5yaK16OhTvD2y1P7WBR7r36LLaXxsWNmZtPejfsMaswNyCX7f/ul8KUqX5e9qmCgY3UjUmIMRs24LMkwmoXW6Cn/3NAhX/VgCeHUakcmA88Car2yYVOdwI=
   on:
     tags: true
     repo: openshine/escova
