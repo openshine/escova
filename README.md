@@ -1,6 +1,8 @@
 ElasticSearch Correctness and perfOrmance Validator
 ===================================================
 
+[![Build Status](https://travis-ci.org/openshine/escova.svg?branch=master)](https://travis-ci.org/openshine/escova)
+
 This software is in the alpha at this point.
 
 ESCOVA is a ElasticSearch query compiler and verifier. It comprises
